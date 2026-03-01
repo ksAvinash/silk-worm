@@ -336,70 +336,141 @@ h4 {
   color: var(--page-muted);
 }
 
-.shell {
-  display: grid;
-  grid-template-columns: 260px 1fr;
+.workspace-page {
   min-height: 100vh;
+  padding: 28px 8vw 40px;
 }
 
-.sidebar {
-  background:
-    linear-gradient(140deg, rgba(220, 234, 198, 0.12), transparent 60%),
-    linear-gradient(180deg, #2f5220 0%, #43682a 52%, #375a22 100%);
-  color: #f4f8ee;
+.workspace-topbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 20px;
+}
+
+.workspace-eyebrow {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--page-muted);
+  margin-bottom: 6px;
+}
+
+.workspace-topbar h1 {
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  margin-bottom: 4px;
+}
+
+.workspace-role {
+  color: var(--page-muted);
+  font-size: 13px;
+}
+
+.workspace-logout {
+  width: auto;
+  min-width: 112px;
+  padding: 11px 16px;
+}
+
+.workspace-quick-actions {
+  background: var(--surface);
+  border: 1px solid rgba(31, 42, 29, 0.1);
+  border-radius: 20px;
+  box-shadow: 0 10px 24px rgba(37, 57, 21, 0.08);
   padding: 20px;
-  border-right: 1px solid rgba(235, 245, 220, 0.2);
-  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.08);
+  margin-bottom: 18px;
 }
 
-.sidebar h1 {
-  margin: 0 0 14px;
-  font-size: 1.22rem;
-  letter-spacing: 0.4px;
+.workspace-quick-head {
+  margin-bottom: 14px;
 }
 
-.tenant-name {
-  margin: 0 0 4px;
-  font-size: 0.88rem;
-  opacity: 0.95;
+.workspace-quick-head h2 {
+  font-size: 1.2rem;
+  margin-bottom: 4px;
 }
 
-.tenant-meta {
-  margin: 0 0 16px;
-  font-size: 0.82rem;
-  opacity: 0.8;
+.workspace-quick-head p {
+  color: var(--page-muted);
+  font-size: 14px;
 }
 
-.sidebar nav {
+.workspace-actions-grid {
   display: grid;
-  gap: 8px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
 }
 
-.sidebar a {
-  padding: 10px 11px;
-  border-radius: 8px;
-  opacity: 0.96;
-  transition: background 0.2s ease, transform 0.2s ease;
+.workspace-action-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(31, 42, 29, 0.16);
+  background: #fff;
+  border-radius: 14px;
+  padding: 12px;
+  min-height: 84px;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.sidebar a:hover,
-.sidebar a.active {
-  background: rgba(242, 250, 228, 0.2);
-  transform: translateX(2px);
+.workspace-action-card:hover {
+  transform: translateY(-1px);
+  border-color: rgba(31, 42, 29, 0.28);
+  box-shadow: 0 8px 20px rgba(37, 57, 21, 0.08);
 }
 
-.logout-btn {
-  margin-top: 18px;
-  width: 100%;
+.workspace-action-card.active {
+  border-color: var(--accent);
+  background: #f4faeb;
+}
+
+.workspace-action-icon {
+  width: 38px;
+  height: 38px;
   border-radius: 10px;
-  background: rgba(240, 248, 226, 0.15);
-  border: 1px solid rgba(231, 243, 211, 0.45);
-  color: #edf7dc;
-  padding: 10px 12px;
+  display: grid;
+  place-items: center;
+  background: #edf5e1;
+  color: #41651f;
+  flex: 0 0 38px;
+}
+
+.workspace-action-card.active .workspace-action-icon {
+  background: #d9ebbe;
+  color: #2e4a12;
+}
+
+.workspace-action-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.workspace-action-body {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.workspace-action-title {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.workspace-action-desc {
+  color: var(--page-muted);
+  font-size: 12px;
+  line-height: 1.35;
 }
 
 .main {
   padding: 24px;
+  width: 100%;
+}
+
+.workspace-main {
+  padding: 0;
 }
 
 .card {
@@ -411,6 +482,7 @@ h4 {
   box-shadow: 0 10px 24px rgba(37, 57, 21, 0.08);
   position: relative;
   overflow: hidden;
+  word-break: break-word;
 }
 
 .card::before {
@@ -443,6 +515,11 @@ h4 {
 
 .muted {
   color: var(--page-muted);
+}
+
+label {
+  display: grid;
+  gap: 6px;
 }
 
 .auth-page {
@@ -530,6 +607,7 @@ select {
   border-radius: 9px;
   border: 1px solid rgba(31, 42, 29, 0.15);
   padding: 10px 11px;
+  max-width: 100%;
 }
 
 button {
@@ -597,25 +675,27 @@ button:disabled {
   .landing-steps {
     grid-template-columns: 1fr;
   }
+
+  .workspace-actions-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 900px) {
-  .shell {
+  .grid {
     grid-template-columns: 1fr;
   }
 
-  .sidebar {
-    position: sticky;
-    top: 0;
-    z-index: 10;
+  .workspace-page {
+    padding: 18px 16px 28px;
   }
 
-  .sidebar nav {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  .workspace-topbar {
+    gap: 10px;
   }
 
-  .main {
-    padding: 16px;
+  .workspace-quick-actions {
+    padding: 14px;
   }
 }
 
@@ -649,5 +729,103 @@ button:disabled {
 
   .auth-card {
     padding: 28px 20px;
+  }
+
+  .landing-panel {
+    padding: 20px;
+  }
+
+  .landing-panel h2 {
+    font-size: 24px;
+  }
+
+  .landing-start {
+    padding: 18px;
+  }
+}
+
+@media (max-width: 560px) {
+  .landing-nav {
+    gap: 10px;
+  }
+
+  .landing-nav-cta {
+    padding: 10px 14px;
+    font-size: 12px;
+  }
+
+  .landing-hero {
+    padding-top: 98px;
+    padding-bottom: 44px;
+  }
+
+  .landing-copy h1 {
+    font-size: clamp(1.6rem, 9vw, 2.25rem);
+    line-height: 1.12;
+  }
+
+  .landing-actions {
+    display: grid;
+    gap: 10px;
+  }
+
+  .primary-cta,
+  .secondary-cta {
+    width: 100%;
+    text-align: center;
+  }
+
+  .panel-row {
+    font-size: 14px;
+    padding: 10px;
+  }
+
+  .auth-page {
+    padding: 12px;
+  }
+
+  .auth-card {
+    border-radius: 14px;
+    padding: 24px 16px;
+  }
+
+  .auth-head h1 {
+    font-size: 28px;
+  }
+
+  .auth-recaptcha {
+    overflow-x: auto;
+  }
+
+  .main h1 {
+    font-size: 1.6rem;
+  }
+
+  input,
+  select,
+  button {
+    width: 100%;
+  }
+
+  .workspace-logout {
+    width: 100%;
+  }
+
+  .workspace-topbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .workspace-actions-grid {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .workspace-action-card {
+    min-width: 220px;
+    flex: 0 0 auto;
   }
 }
