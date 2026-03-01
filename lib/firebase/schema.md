@@ -14,6 +14,9 @@
 - `role`: "owner" | "manager" | "operator"
 - `phone`: string
 - `displayName`: string
+- `active`: boolean
+- `notes`: string
+- `permissions`: object (e.g. `{ slots: "read" | "edit" | "none" }`)
 - `createdAt`: timestamp
 
 ### farmers/{farmerId}
