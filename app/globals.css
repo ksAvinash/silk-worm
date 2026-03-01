@@ -465,12 +465,21 @@ h4 {
 }
 
 .auth-head h1 {
-  font-size: 30px;
-  margin-bottom: 6px;
+  font-size: 32px;
+  margin-bottom: 8px;
+  letter-spacing: 0.4px;
 }
 
 .auth-head p {
   color: var(--page-muted);
+  font-size: 13px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.auth-form {
+  display: grid;
+  gap: 16px;
 }
 
 .auth-field {
@@ -485,9 +494,34 @@ h4 {
   color: var(--page-muted);
 }
 
+.auth-hint {
+  font-size: 11px;
+  color: #7c8978;
+}
+
+.auth-error {
+  padding: 12px 14px;
+  background: #f7eee7;
+  border: 1px solid rgba(128, 98, 58, 0.28);
+  border-radius: 8px;
+  color: #6a4d2a;
+  font-size: 13px;
+}
+
 .auth-recaptcha {
   display: grid;
   justify-content: center;
+  margin-bottom: 6px;
+}
+
+.auth-back-btn {
+  background: #e9ebdf;
+  color: #4f6049;
+  border: 1px solid rgba(31, 42, 29, 0.14);
+}
+
+.auth-back-btn:hover:not(:disabled) {
+  background: #dde4d0;
 }
 
 input,
