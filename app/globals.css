@@ -387,9 +387,18 @@ h4 {
 }
 
 .workspace-logout {
-  width: auto;
-  min-width: 112px;
-  padding: 11px 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  min-width: unset;
+  height: 40px;
+  padding: 0;
+  flex-shrink: 0;
+  color: var(--page-ink);
+  background: #fff;
+  border: 1px solid var(--stroke);
+  border-radius: 50%;
 }
 
 .workspace-quick-actions {
@@ -881,12 +890,12 @@ button:disabled {
   }
 
   .workspace-logout {
-    width: 100%;
+    width: 40px;
   }
 
   .workspace-topbar {
-    flex-direction: column;
-    align-items: stretch;
+    flex-direction: row;
+    align-items: center;
   }
 
   .page-head-inline {
