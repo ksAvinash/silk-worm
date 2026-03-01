@@ -237,22 +237,22 @@ export default function SlotsPage() {
                       <div className={styles.inlineActions}>
                         <button
                           type="button"
-                          className={styles.editBtn}
+                          className="table-action-btn table-action-edit"
                           onClick={() => openEditModal(slot)}
                           aria-label={`Edit ${slot.slotName}`}
                           title="Edit"
                         >
-                          <span className={styles.editIcon}>✎</span>
+                          <span className="table-action-edit-icon">✎</span>
                         </button>
                         {slot.bookedQty === 0 ? (
                           <button
                             type="button"
-                            className={`${styles.actionBtn} ${styles.deleteBtn}`}
+                            className="table-action-btn table-action-delete"
                             onClick={() => setDeletingSlot(slot)}
                             aria-label={`Delete ${slot.slotName}`}
                             title="Delete"
                           >
-                            <span className={styles.actionIcon}>✕</span>
+                            ✕
                           </button>
                         ) : null}
                       </div>

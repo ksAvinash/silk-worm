@@ -307,12 +307,12 @@ export default function BookingsPage() {
                       <div className={styles.inlineActions}>
                         <button
                           type="button"
-                          className={styles.editBtn}
+                          className="table-action-btn table-action-edit"
                           onClick={() => openEditModal(booking)}
                           aria-label={`Edit booking ${booking.id}`}
                           title="Edit"
                         >
-                          <span className={styles.editIcon}>✎</span>
+                          <span className="table-action-edit-icon">✎</span>
                         </button>
                       </div>
                     </td>

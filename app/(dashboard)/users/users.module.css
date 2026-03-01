@@ -164,47 +164,6 @@
   align-items: center;
 }
 
-.editBtn,
-.deleteBtn {
-  width: 32px;
-  height: 32px;
-  border: 1px solid rgba(30, 25, 22, 0.12);
-  background: #fff;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: inherit;
-}
-
-.editBtn {
-  color: #4a6f23;
-}
-
-.editIcon {
-  display: inline-block;
-  transform: rotate(90deg);
-}
-
-.editBtn:hover {
-  background: #4a6f23;
-  color: #fff;
-  border-color: #4a6f23;
-}
-
-.deleteBtn {
-  color: #c74624;
-}
-
-.deleteBtn:hover {
-  background: #c74624;
-  color: #fff;
-  border-color: #c74624;
-}
-
 .ownerText {
   font-size: 12px;
   text-transform: uppercase;

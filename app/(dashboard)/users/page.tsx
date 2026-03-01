@@ -305,10 +305,10 @@ export default function UsersPage() {
                   <td className={styles.actions} data-label="Actions">
                     {user.role !== "owner" ? (
                       <>
-                        <button type="button" className={styles.editBtn} onClick={() => openEdit(user)} title="Edit">
-                          <span className={styles.editIcon}>✎</span>
+                        <button type="button" className="table-action-btn table-action-edit" onClick={() => openEdit(user)} title="Edit">
+                          <span className="table-action-edit-icon">✎</span>
                         </button>
-                        <button type="button" className={styles.deleteBtn} onClick={() => setDeleteTarget(user)} title="Delete">
+                        <button type="button" className="table-action-btn table-action-delete" onClick={() => setDeleteTarget(user)} title="Delete">
                           ✕
                         </button>
                       </>

@@ -255,16 +255,16 @@ export default function FarmersPage() {
                       <div className={styles.inlineActions}>
                         <button
                           type="button"
-                          className={styles.editBtn}
+                          className="table-action-btn table-action-edit"
                           onClick={() => openEditModal(farmer)}
                           aria-label={`Edit ${farmer.name}`}
                           title="Edit"
                         >
-                          <span className={styles.editIcon}>✎</span>
+                          <span className="table-action-edit-icon">✎</span>
                         </button>
                         <button
                           type="button"
-                          className={`${styles.actionBtn} ${styles.deleteBtn}`}
+                          className="table-action-btn table-action-delete"
                           onClick={() => setDeletingFarmer(farmer)}
                           aria-label={`Delete ${farmer.name}`}
                           title="Delete"
