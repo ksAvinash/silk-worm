@@ -119,6 +119,38 @@
   color: var(--page-ink);
 }
 
+.rowActions {
+  min-width: 180px;
+}
+
+.inlineActions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.previewBtn,
+.downloadBtn {
+  border: 1px solid rgba(31, 42, 29, 0.18);
+  background: #fff;
+  color: var(--page-ink);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.downloadBtn {
+  background: #eef6e5;
+  border-color: rgba(31, 42, 29, 0.24);
+}
+
+.previewBtn:hover,
+.downloadBtn:hover {
+  filter: brightness(0.98);
+}
+
 .statusPill {
   display: inline-block;
   padding: 4px 10px;
@@ -139,19 +171,9 @@
   color: #3c568e;
 }
 
-.statusPartial {
-  background: #f8f0df;
-  color: #946015;
-}
-
 .statusPaid {
   background: #dff2ea;
   color: #1d7750;
-}
-
-.statusOverdue {
-  background: #fde9e7;
-  color: #b53a2d;
 }
 
 .empty {
@@ -330,5 +352,18 @@
     text-transform: uppercase;
     letter-spacing: 0.4px;
     color: var(--page-muted);
+  }
+
+  .table td.rowActions::before {
+    content: none;
+  }
+
+  .rowActions {
+    min-width: 0;
+    justify-content: flex-start;
+  }
+
+  .inlineActions {
+    width: 100%;
   }
 }

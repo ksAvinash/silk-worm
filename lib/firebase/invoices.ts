@@ -3,7 +3,7 @@ import { businessCollection, businessDoc } from "./business";
 import { db } from "./config";
 import type { BookingRecord } from "./bookings";
 
-export type InvoiceStatus = "draft" | "issued" | "partial" | "paid" | "overdue";
+export type InvoiceStatus = "draft" | "issued" | "paid";
 
 export interface InvoiceRecord {
   id: string;
@@ -26,7 +26,7 @@ interface CreateInvoiceInput {
 }
 
 function normalizeStatus(value: unknown): InvoiceStatus {
-  if (value === "draft" || value === "partial" || value === "paid" || value === "overdue") {
+  if (value === "draft" || value === "paid") {
     return value;
   }
   return "issued";
