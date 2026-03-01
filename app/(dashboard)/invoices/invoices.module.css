@@ -131,24 +131,35 @@
 
 .previewBtn,
 .downloadBtn {
-  border: 1px solid rgba(31, 42, 29, 0.18);
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  flex: 0 0 32px;
+  aspect-ratio: 1 / 1;
+  border: 1px solid rgba(30, 25, 22, 0.12);
   background: #fff;
-  color: var(--page-ink);
-  border-radius: 8px;
-  padding: 6px 10px;
-  font-size: 12px;
+  color: #4f5d45;
+  border-radius: 6px;
+  padding: 0;
+  font-size: 14px;
   cursor: pointer;
   font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
 }
 
 .downloadBtn {
-  background: #eef6e5;
-  border-color: rgba(31, 42, 29, 0.24);
+  color: #4a6f23;
 }
 
 .previewBtn:hover,
 .downloadBtn:hover {
-  filter: brightness(0.98);
+  background: #4a6f23;
+  color: #fff;
+  border-color: #4a6f23;
 }
 
 .statusPill {
@@ -198,6 +209,16 @@
   width: 100%;
   max-width: 620px;
   max-height: 90vh;
+  overflow-y: auto;
+  border: 1px solid rgba(31, 42, 29, 0.12);
+  padding: 24px;
+}
+
+.previewModal {
+  background: linear-gradient(180deg, var(--surface) 0%, var(--surface-2) 100%);
+  border-radius: 20px;
+  width: min(920px, 96vw);
+  max-height: 92vh;
   overflow-y: auto;
   border: 1px solid rgba(31, 42, 29, 0.12);
   padding: 24px;
@@ -274,6 +295,111 @@
 .bookingMeta {
   font-size: 12px;
   color: var(--page-muted);
+}
+
+.invoiceDetails {
+  background: #fff;
+  border: 1px solid rgba(31, 42, 29, 0.1);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.invoicePreviewHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(31, 42, 29, 0.08);
+}
+
+.invoiceLabel {
+  font-size: 11px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--page-muted);
+  margin: 0 0 4px;
+}
+
+.invoicePreviewHeader h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.invoiceMetaRight {
+  text-align: right;
+  font-size: 12px;
+  color: var(--page-muted);
+}
+
+.invoiceMetaRight p {
+  margin: 2px 0;
+}
+
+.billedTo {
+  margin-bottom: 12px;
+}
+
+.billedLabel {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--page-muted);
+  margin: 0 0 4px;
+}
+
+.billedTo h4 {
+  margin: 0;
+}
+
+.lineItems {
+  margin-bottom: 14px;
+  border: 1px solid rgba(31, 42, 29, 0.08);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.lineItem {
+  display: flex;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(31, 42, 29, 0.06);
+  font-size: 12px;
+}
+
+.lineItem:last-child {
+  border-bottom: none;
+}
+
+.lineItemHeader {
+  background: #f2f6ea;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  font-size: 11px;
+}
+
+.column {
+  flex: 1;
+  min-width: 0;
+}
+
+.totals {
+  border-top: 1px solid rgba(31, 42, 29, 0.08);
+  padding-top: 8px;
+}
+
+.totalRow {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  font-size: 13px;
+}
+
+.totalRow.final {
+  font-weight: 700;
 }
 
 .hint {
@@ -365,5 +491,24 @@
 
   .inlineActions {
     width: 100%;
+  }
+
+  .previewModal {
+    width: 100%;
+    border-radius: 16px;
+    padding: 16px;
+  }
+
+  .invoicePreviewHeader {
+    flex-direction: column;
+  }
+
+  .invoiceMetaRight {
+    text-align: left;
+  }
+
+  .lineItem {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

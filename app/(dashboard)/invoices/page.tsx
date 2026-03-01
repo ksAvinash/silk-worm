@@ -1,12 +1,15 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
 import SearchInput from "@/components/ui/SearchInput";
 import CustomDatePicker from "@/components/ui/CustomDatePicker";
 import CustomDropdown, { type DropdownOption } from "@/components/ui/CustomDropdown";
 import { useAuth } from "@/components/AuthProvider";
 import { listBookingsByBusiness, type BookingRecord } from "@/lib/firebase/bookings";
 import { listFarmersByBusiness, type FarmerRecord } from "@/lib/firebase/farmers";
+import { listSlotsByBusiness, type SlotRecord } from "@/lib/firebase/slots";
 import { createInvoiceFromBookings, listInvoicesByBusiness, type InvoiceRecord, type InvoiceStatus } from "@/lib/firebase/invoices";
 import styles from "./invoices.module.css";
 
@@ -44,6 +47,7 @@ export default function InvoicesPage() {
   const [invoices, setInvoices] = useState<InvoiceRecord[]>([]);
   const [farmers, setFarmers] = useState<FarmerRecord[]>([]);
   const [bookings, setBookings] = useState<BookingRecord[]>([]);
+  const [slots, setSlots] = useState<SlotRecord[]>([]);
 
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState("Loading...");
@@ -61,15 +65,17 @@ export default function InvoicesPage() {
 
     setLoading(true);
     try {
-      const [nextInvoices, nextFarmers, nextBookings] = await Promise.all([
+      const [nextInvoices, nextFarmers, nextBookings, nextSlots] = await Promise.all([
         listInvoicesByBusiness(profile.businessId),
         listFarmersByBusiness(profile.businessId),
-        listBookingsByBusiness(profile.businessId)
+        listBookingsByBusiness(profile.businessId),
+        listSlotsByBusiness(profile.businessId)
       ]);
 
       setInvoices(nextInvoices);
       setFarmers(nextFarmers);
       setBookings(nextBookings);
+      setSlots(nextSlots);
       setStatus(nextInvoices.length ? "" : "No invoices yet. Create your first invoice.");
     } catch {
       setStatus("Could not load invoices. Please refresh and try again.");
@@ -115,6 +121,7 @@ export default function InvoicesPage() {
 
   const farmerNameById = useMemo(() => new Map(farmers.map((farmer) => [farmer.id, farmer.name])), [farmers]);
   const bookingById = useMemo(() => new Map(bookings.map((booking) => [booking.id, booking])), [bookings]);
+  const slotNameById = useMemo(() => new Map(slots.map((slot) => [slot.id, slot.slotName])), [slots]);
 
   const filteredInvoices = useMemo(() => {
     const query = searchText.trim().toLowerCase();
@@ -160,63 +167,84 @@ export default function InvoicesPage() {
     }
   };
 
-  const handleDownloadInvoice = (invoice: InvoiceRecord) => {
-    const farmerName = farmerNameById.get(invoice.farmerId) || "Farmer";
-    const rows = invoice.bookingIds
-      .map((bookingId) => bookingById.get(bookingId))
-      .filter((booking): booking is BookingRecord => Boolean(booking));
+  const handleDownloadInvoice = async (invoice: InvoiceRecord) => {
+    const element = document.getElementById(`invoice-content-${invoice.id}`);
+    if (!element) return;
 
-    const rowsHtml = rows
-      .map(
-        (booking) => `
-          <tr>
-            <td style="padding:8px;border:1px solid #ddd;">${booking.bookingDate || "-"}</td>
-            <td style="padding:8px;border:1px solid #ddd;text-align:right;">${booking.qtyBooked}</td>
-            <td style="padding:8px;border:1px solid #ddd;text-align:right;">${booking.ratePerWorm}</td>
-            <td style="padding:8px;border:1px solid #ddd;text-align:right;">${booking.subtotal}</td>
-          </tr>
-        `
-      )
-      .join("");
+    const previousStyles = {
+      width: element.style.width,
+      maxWidth: element.style.maxWidth,
+      margin: element.style.margin,
+      minHeight: element.style.minHeight
+    };
 
-    const content = `
-      <html>
-        <head>
-          <title>${invoice.invoiceNo}</title>
-        </head>
-        <body style="font-family: Arial, sans-serif; padding: 24px; color: #1f2a1d;">
-          <h2 style="margin:0 0 6px;">Invoice ${invoice.invoiceNo}</h2>
-          <p style="margin:0 0 4px;">Date: ${invoice.invoiceDate || "-"}</p>
-          <p style="margin:0 0 16px;">Farmer: ${farmerName}</p>
+    element.style.width = "794px";
+    element.style.maxWidth = "none";
+    element.style.margin = "0";
+    element.style.minHeight = "1122px";
 
-          <table style="border-collapse: collapse; width: 100%; margin-bottom: 16px;">
-            <thead>
-              <tr>
-                <th style="padding:8px;border:1px solid #ddd;text-align:left;">Date</th>
-                <th style="padding:8px;border:1px solid #ddd;text-align:right;">Qty</th>
-                <th style="padding:8px;border:1px solid #ddd;text-align:right;">Rate</th>
-                <th style="padding:8px;border:1px solid #ddd;text-align:right;">Amount</th>
-              </tr>
-            </thead>
-            <tbody>${rowsHtml}</tbody>
-          </table>
+    try {
+      const renderScale = 1.5;
+      const jpegQuality = 0.78;
+      const canvas = await html2canvas(element, {
+        scale: renderScale,
+        useCORS: true,
+        allowTaint: true
+      });
 
-          <p style="margin:4px 0;">Total: ${invoice.totalAmount}</p>
-          <p style="margin:4px 0;">Paid: ${invoice.paidAmount}</p>
-          <p style="margin:4px 0;">Due: ${invoice.dueAmount}</p>
-          <p style="margin:4px 0;">Status: ${invoice.status}</p>
-        </body>
-      </html>
-    `;
+      const imgData = canvas.toDataURL("image/jpeg", jpegQuality);
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+        compress: true
+      });
 
-    const printWindow = window.open("", "_blank", "width=900,height=700");
-    if (!printWindow) return;
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 10;
+      const maxWidth = pageWidth - margin * 2;
+      const maxHeight = pageHeight - margin * 2;
+      const scale = maxWidth / canvas.width;
+      const imgWidth = canvas.width * scale;
+      const imgHeight = canvas.height * scale;
+      const pageHeightPx = maxHeight / scale;
 
-    printWindow.document.open();
-    printWindow.document.write(content);
-    printWindow.document.close();
-    printWindow.focus();
-    printWindow.print();
+      if (imgHeight <= maxHeight) {
+        pdf.addImage(imgData, "JPEG", margin, margin, imgWidth, imgHeight);
+      } else {
+        let y = 0;
+        let pageIndex = 0;
+
+        while (y < canvas.height) {
+          const sliceHeight = Math.min(pageHeightPx, canvas.height - y);
+          const pageCanvas = document.createElement("canvas");
+          pageCanvas.width = canvas.width;
+          pageCanvas.height = sliceHeight;
+
+          const pageContext = pageCanvas.getContext("2d");
+          if (!pageContext) break;
+
+          pageContext.drawImage(canvas, 0, y, canvas.width, sliceHeight, 0, 0, canvas.width, sliceHeight);
+
+          const pageData = pageCanvas.toDataURL("image/jpeg", jpegQuality);
+          if (pageIndex > 0) {
+            pdf.addPage();
+          }
+
+          pdf.addImage(pageData, "JPEG", margin, margin, imgWidth, sliceHeight * scale);
+          y += sliceHeight;
+          pageIndex += 1;
+        }
+      }
+
+      pdf.save(`${invoice.invoiceNo}.pdf`);
+    } finally {
+      element.style.width = previousStyles.width;
+      element.style.maxWidth = previousStyles.maxWidth;
+      element.style.margin = previousStyles.margin;
+      element.style.minHeight = previousStyles.minHeight;
+    }
   };
 
   const previewBookings = useMemo(() => {
@@ -296,15 +324,38 @@ export default function InvoicesPage() {
                           type="button"
                           className={styles.previewBtn}
                           onClick={() => setPreviewInvoice(invoice)}
+                          aria-label="Preview invoice"
+                          title="Preview"
                         >
-                          Preview
+                          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+                            <path
+                              d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="1.8"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                            <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" strokeWidth="1.8" />
+                          </svg>
                         </button>
                         <button
                           type="button"
                           className={styles.downloadBtn}
                           onClick={() => handleDownloadInvoice(invoice)}
+                          aria-label="Download invoice"
+                          title="Download"
                         >
-                          Download
+                          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+                            <path
+                              d="M12 3v11M8 10l4 4 4-4M4 20h16"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="1.8"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
                         </button>
                       </div>
                     </td>
@@ -392,7 +443,7 @@ export default function InvoicesPage() {
 
       {previewInvoice ? (
         <div className={styles.modalOverlay} onClick={() => setPreviewInvoice(null)}>
-          <div className={styles.modal} onClick={(event) => event.stopPropagation()}>
+          <div className={styles.previewModal} onClick={(event) => event.stopPropagation()}>
             <div className={styles.modalHeader}>
               <h2>Invoice Preview</h2>
               <button type="button" className={styles.closeBtn} onClick={() => setPreviewInvoice(null)}>
@@ -400,35 +451,80 @@ export default function InvoicesPage() {
               </button>
             </div>
 
-            <div className={styles.form}>
-              <p className={styles.hint}><strong>Invoice:</strong> {previewInvoice.invoiceNo}</p>
-              <p className={styles.hint}><strong>Date:</strong> {previewInvoice.invoiceDate || "-"}</p>
-              <p className={styles.hint}><strong>Farmer:</strong> {farmerNameById.get(previewInvoice.farmerId) || "Farmer"}</p>
+            <div id={`invoice-content-${previewInvoice.id}`} className={styles.invoiceDetails}>
+              <div className={styles.invoicePreviewHeader}>
+                <div>
+                  <p className={styles.invoiceLabel}>Invoice</p>
+                  <h3>{previewInvoice.invoiceNo}</h3>
+                </div>
+                <div className={styles.invoiceMetaRight}>
+                  <p>Date: {previewInvoice.invoiceDate || "-"}</p>
+                  <p>Status: {previewInvoice.status}</p>
+                </div>
+              </div>
 
-              <div className={styles.bookingList}>
+              <div className={styles.billedTo}>
+                <p className={styles.billedLabel}>Billed To</p>
+                <h4>{farmerNameById.get(previewInvoice.farmerId) || "Farmer"}</h4>
+              </div>
+
+              <div className={styles.lineItems}>
+                <div className={`${styles.lineItem} ${styles.lineItemHeader}`}>
+                  <span className={styles.column}>Date</span>
+                  <span className={styles.column}>Slot</span>
+                  <span className={styles.column}>Qty</span>
+                  <span className={styles.column}>Rate</span>
+                  <span className={styles.column}>Amount</span>
+                </div>
                 {previewBookings.map((booking) => (
-                  <div key={booking.id} className={styles.bookingItem}>
-                    <span>
-                      {booking.bookingDate || "-"} · Qty {formatNumber(booking.qtyBooked)} · Rate {formatNumber(booking.ratePerWorm)}
-                    </span>
-                    <span className={styles.bookingMeta}>{formatCurrency(booking.subtotal)}</span>
+                  <div key={booking.id} className={styles.lineItem}>
+                    <span className={styles.column}>{booking.bookingDate || "-"}</span>
+                    <span className={styles.column}>{slotNameById.get(booking.slotId) || "Slot"}</span>
+                    <span className={styles.column}>{formatNumber(booking.qtyBooked)}</span>
+                    <span className={styles.column}>{formatNumber(booking.ratePerWorm)}</span>
+                    <span className={styles.column}>{formatCurrency(booking.subtotal)}</span>
                   </div>
                 ))}
               </div>
 
-              <p className={styles.hint}><strong>Total:</strong> {formatCurrency(previewInvoice.totalAmount)}</p>
-              <p className={styles.hint}><strong>Paid:</strong> {formatCurrency(previewInvoice.paidAmount)}</p>
-              <p className={styles.hint}><strong>Due:</strong> {formatCurrency(previewInvoice.dueAmount)}</p>
-              <p className={styles.hint}><strong>Status:</strong> {previewInvoice.status}</p>
-
-              <div className={styles.actions}>
-                <button type="button" className={styles.secondaryBtn} onClick={() => setPreviewInvoice(null)}>
-                  Close
-                </button>
-                <button type="button" onClick={() => handleDownloadInvoice(previewInvoice)}>
-                  Download
-                </button>
+              <div className={styles.totals}>
+                <div className={styles.totalRow}>
+                  <span>Total</span>
+                  <span>{formatCurrency(previewInvoice.totalAmount)}</span>
+                </div>
+                <div className={styles.totalRow}>
+                  <span>Paid</span>
+                  <span>{formatCurrency(previewInvoice.paidAmount)}</span>
+                </div>
+                <div className={`${styles.totalRow} ${styles.final}`}>
+                  <span>Due</span>
+                  <span>{formatCurrency(previewInvoice.dueAmount)}</span>
+                </div>
               </div>
+            </div>
+
+            <div className={styles.actions} data-html2canvas-ignore="true">
+              <button type="button" className={styles.secondaryBtn} onClick={() => setPreviewInvoice(null)}>
+                Close
+              </button>
+              <button
+                type="button"
+                className={styles.downloadBtn}
+                onClick={() => void handleDownloadInvoice(previewInvoice)}
+                aria-label="Download invoice PDF"
+                title="Download PDF"
+              >
+                <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+                  <path
+                    d="M12 3v11M8 10l4 4 4-4M4 20h16"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
             </div>
           </div>
         </div>
