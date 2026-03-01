@@ -121,9 +121,9 @@ export default function DashboardPage() {
           <span>{formatNumber(metrics?.openSlots || 0)} open</span>
         </div>
         <div className={styles.statCard}>
-          <p>Total capacity</p>
-          <h2>{formatNumber(metrics?.totalCapacity || 0)}</h2>
-          <span>{metrics?.utilizationPercent || 0}% utilized</span>
+          <p>Total bookings</p>
+          <h2>{formatNumber(metrics?.activeSlotsBookedQty || 0)}</h2>
+          <span>{formatNumber(metrics?.openSlots || 0)} Active Slots</span>
         </div>
         <div className={styles.statCard}>
           <p>Booked quantity</p>

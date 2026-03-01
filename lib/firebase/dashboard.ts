@@ -6,6 +6,7 @@ export interface DashboardMetrics {
   totalSlots: number;
   slotsThisWeek: number;
   openSlots: number;
+  activeSlotsBookedQty: number;
   totalCapacity: number;
   totalBooked: number;
   totalBalance: number;
@@ -100,6 +101,9 @@ export async function getDashboardMetrics(businessId: string): Promise<Dashboard
   const totalBooked = slots.reduce((sum, row) => sum + row.bookedQty, 0);
   const totalBalance = slots.reduce((sum, row) => sum + row.availableQty, 0);
   const openSlots = slots.filter((row) => row.status === "open").length;
+  const activeSlotsBookedQty = slots
+    .filter((row) => row.status === "open")
+    .reduce((sum, row) => sum + row.bookedQty, 0);
   const slotsThisWeek = slots.filter((row) => row.startDate >= weekStart).length;
 
   const pendingDue = invoiceSnapshot.docs.reduce((sum, row) => sum + asNumber(row.data().dueAmount), 0);
@@ -135,6 +139,7 @@ export async function getDashboardMetrics(businessId: string): Promise<Dashboard
     totalSlots: slots.length,
     slotsThisWeek,
     openSlots,
+    activeSlotsBookedQty,
     totalCapacity,
     totalBooked,
     totalBalance,
