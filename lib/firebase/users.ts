@@ -1,16 +1,12 @@
 import {
   addDoc,
-  collection,
   deleteDoc,
-  doc,
   getDocs,
-  query,
   serverTimestamp,
-  updateDoc,
-  where
+  updateDoc
 } from "firebase/firestore";
-import { db } from "./config";
 import type { UserRole } from "./tenant";
+import { businessCollection, businessDoc } from "./business";
 
 export type PermissionLevel = "none" | "read" | "edit";
 
@@ -18,7 +14,6 @@ export type ModulePermissions = Record<string, PermissionLevel>;
 
 export interface TeamUserRecord {
   id: string;
-  businessId: string;
   role: UserRole;
   phone: string;
   displayName: string;
@@ -38,6 +33,7 @@ interface CreateTeamUserInput {
 }
 
 interface UpdateTeamUserInput {
+  businessId: string;
   userId: string;
   role: UserRole;
   phone: string;
@@ -59,14 +55,12 @@ function normalizePermissions(permissions: ModulePermissions): ModulePermissions
 }
 
 export async function listUsersByBusiness(businessId: string): Promise<TeamUserRecord[]> {
-  const q = query(collection(db, "users"), where("businessId", "==", businessId));
-  const snap = await getDocs(q);
+  const snap = await getDocs(businessCollection(businessId, "users"));
 
   const rows = snap.docs.map((row) => {
     const data = row.data() as Partial<TeamUserRecord>;
     return {
       id: row.id,
-      businessId: String(data.businessId || ""),
       role: (data.role || "operator") as UserRole,
       phone: String(data.phone || ""),
       displayName: String(data.displayName || "User"),
@@ -84,8 +78,7 @@ export async function listUsersByBusiness(businessId: string): Promise<TeamUserR
 }
 
 export async function createTeamUser(input: CreateTeamUserInput): Promise<string> {
-  const docRef = await addDoc(collection(db, "users"), {
-    businessId: input.businessId,
+  const docRef = await addDoc(businessCollection(input.businessId, "users"), {
     role: input.role,
     phone: input.phone,
     displayName: input.displayName,
@@ -100,7 +93,7 @@ export async function createTeamUser(input: CreateTeamUserInput): Promise<string
 }
 
 export async function updateTeamUser(input: UpdateTeamUserInput): Promise<void> {
-  await updateDoc(doc(db, "users", input.userId), {
+  await updateDoc(businessDoc(input.businessId, "users", input.userId), {
     role: input.role,
     phone: input.phone,
     displayName: input.displayName,
@@ -111,6 +104,6 @@ export async function updateTeamUser(input: UpdateTeamUserInput): Promise<void> 
   });
 }
 
-export async function removeTeamUser(userId: string): Promise<void> {
-  await deleteDoc(doc(db, "users", userId));
+export async function removeTeamUser(businessId: string, userId: string): Promise<void> {
+  await deleteDoc(businessDoc(businessId, "users", userId));
 }

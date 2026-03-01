@@ -109,7 +109,7 @@ export default function SlotsPage() {
   };
 
   const handleUpdateSlot = async () => {
-    if (!editingSlot) return;
+    if (!editingSlot || !profile?.businessId) return;
 
     const capacity = Number(editCapacity);
     if (!editName.trim() || !capacity || capacity <= 0) {
@@ -124,6 +124,7 @@ export default function SlotsPage() {
 
     try {
       await updateSlotBasics({
+        businessId: profile.businessId,
         slotId: editingSlot.id,
         slotName: editName.trim(),
         eggCapacity: capacity,
@@ -138,7 +139,7 @@ export default function SlotsPage() {
   };
 
   const handleDeleteSlot = async () => {
-    if (!deletingSlot) return;
+    if (!deletingSlot || !profile?.businessId) return;
     if (deletingSlot.bookedQty > 0) {
       setStatus("Cannot delete slot with bookings.");
       setDeletingSlot(null);
@@ -146,7 +147,7 @@ export default function SlotsPage() {
     }
 
     try {
-      await deleteSlot(deletingSlot.id);
+      await deleteSlot(profile.businessId, deletingSlot.id);
       setStatus("Slot deleted.");
       setDeletingSlot(null);
       await refreshSlots();

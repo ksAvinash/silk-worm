@@ -1,21 +1,17 @@
 import {
   Timestamp,
   addDoc,
-  collection,
   deleteDoc,
-  doc,
   getDocs,
   orderBy,
   query,
   serverTimestamp,
-  updateDoc,
-  where
+  updateDoc
 } from "firebase/firestore";
-import { db } from "./config";
+import { businessCollection, businessDoc } from "./business";
 
 export interface SlotRecord {
   id: string;
-  businessId: string;
   slotName: string;
   startDate: string;
   hatchDate: string;
@@ -52,7 +48,7 @@ function asDateString(value: unknown): string {
 }
 
 export async function listSlotsByBusiness(businessId: string): Promise<SlotRecord[]> {
-  const q = query(collection(db, "slots"), where("businessId", "==", businessId), orderBy("startDate", "desc"));
+  const q = query(businessCollection(businessId, "slots"), orderBy("startDate", "desc"));
   const snapshot = await getDocs(q);
 
   return snapshot.docs.map((row) => {
@@ -60,7 +56,6 @@ export async function listSlotsByBusiness(businessId: string): Promise<SlotRecor
 
     return {
       id: row.id,
-      businessId: data.businessId,
       slotName: data.slotName,
       startDate: asDateString(data.startDate),
       hatchDate: asDateString(data.hatchDate),
@@ -76,8 +71,7 @@ export async function listSlotsByBusiness(businessId: string): Promise<SlotRecor
 export async function createSlot(input: CreateSlotInput): Promise<void> {
   const status = input.status || "planned";
 
-  await addDoc(collection(db, "slots"), {
-    businessId: input.businessId,
+  await addDoc(businessCollection(input.businessId, "slots"), {
     slotName: input.slotName,
     startDate: input.startDate,
     hatchDate: input.hatchDate,
@@ -91,6 +85,7 @@ export async function createSlot(input: CreateSlotInput): Promise<void> {
 }
 
 interface UpdateSlotBasicsInput {
+  businessId: string;
   slotId: string;
   slotName: string;
   eggCapacity: number;
@@ -102,7 +97,7 @@ export async function updateSlotBasics(input: UpdateSlotBasicsInput): Promise<vo
     throw new Error("Capacity cannot be less than booked quantity.");
   }
 
-  const slotRef = doc(db, "slots", input.slotId);
+  const slotRef = businessDoc(input.businessId, "slots", input.slotId);
   const availableQty = input.eggCapacity - input.bookedQty;
 
   await updateDoc(slotRef, {
@@ -113,6 +108,6 @@ export async function updateSlotBasics(input: UpdateSlotBasicsInput): Promise<vo
   });
 }
 
-export async function deleteSlot(slotId: string): Promise<void> {
-  await deleteDoc(doc(db, "slots", slotId));
+export async function deleteSlot(businessId: string, slotId: string): Promise<void> {
+  await deleteDoc(businessDoc(businessId, "slots", slotId));
 }

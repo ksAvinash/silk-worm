@@ -1,15 +1,5 @@
 import { User } from "firebase/auth";
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  limit,
-  query,
-  serverTimestamp,
-  setDoc,
-  where
-} from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, limit, query, serverTimestamp, setDoc, where } from "firebase/firestore";
 import { db } from "./config";
 
 export type UserRole = "owner" | "manager" | "operator";
@@ -47,6 +37,7 @@ function defaultInvoicePrefix() {
 async function createBusinessForOwner(user: User): Promise<UserProfile> {
   const businessRef = doc(collection(db, "businesses"));
   const userRef = doc(db, "users", user.uid);
+  const teamUserRef = doc(db, "businesses", businessRef.id, "users", user.uid);
 
   const businessPayload = {
     name: defaultBusinessName(user.phoneNumber),
@@ -66,6 +57,23 @@ async function createBusinessForOwner(user: User): Promise<UserProfile> {
 
   await setDoc(businessRef, businessPayload);
   await setDoc(userRef, userPayload);
+  await setDoc(teamUserRef, {
+    role: "owner",
+    phone: user.phoneNumber || "",
+    displayName: user.displayName || "Owner",
+    active: true,
+    notes: "",
+    permissions: {
+      slots: "edit",
+      farmers: "edit",
+      bookings: "edit",
+      invoices: "edit",
+      reports: "edit",
+      users: "edit"
+    },
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  });
 
   return {
     uid: user.uid,
@@ -82,6 +90,27 @@ export async function ensureUserProfile(user: User): Promise<UserProfile> {
 
   if (snap.exists()) {
     const data = snap.data() as Omit<UserProfile, "uid">;
+    const teamUserRef = doc(db, "businesses", data.businessId, "users", user.uid);
+    const teamSnap = await getDoc(teamUserRef);
+    if (!teamSnap.exists()) {
+      await setDoc(teamUserRef, {
+        role: data.role || "owner",
+        phone: data.phone || "",
+        displayName: data.displayName || "Owner",
+        active: true,
+        notes: "",
+        permissions: {
+          slots: "edit",
+          farmers: "edit",
+          bookings: "edit",
+          invoices: "edit",
+          reports: "edit",
+          users: "edit"
+        },
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+    }
     return { uid: user.uid, ...data };
   }
 

@@ -1,6 +1,6 @@
-import { Timestamp, collection, getDocs, query, where } from "firebase/firestore";
-import { db } from "./config";
+import { Timestamp, getDocs } from "firebase/firestore";
 import type { SlotRecord } from "./slots";
+import { businessCollection } from "./business";
 
 export interface DashboardMetrics {
   totalSlots: number;
@@ -59,18 +59,17 @@ function asDateString(value: unknown) {
 
 export async function getDashboardMetrics(businessId: string): Promise<DashboardMetrics> {
   const [slotSnapshot, farmerSnapshot, bookingSnapshot, invoiceSnapshot, paymentSnapshot] = await Promise.all([
-    getDocs(query(collection(db, "slots"), where("businessId", "==", businessId))),
-    getDocs(query(collection(db, "farmers"), where("businessId", "==", businessId))),
-    getDocs(query(collection(db, "bookings"), where("businessId", "==", businessId))),
-    getDocs(query(collection(db, "invoices"), where("businessId", "==", businessId))),
-    getDocs(query(collection(db, "payments"), where("businessId", "==", businessId)))
+    getDocs(businessCollection(businessId, "slots")),
+    getDocs(businessCollection(businessId, "farmers")),
+    getDocs(businessCollection(businessId, "bookings")),
+    getDocs(businessCollection(businessId, "invoices")),
+    getDocs(businessCollection(businessId, "payments"))
   ]);
 
   const slots: SlotRecord[] = slotSnapshot.docs.map((doc) => {
     const data = doc.data();
     return {
       id: doc.id,
-      businessId: String(data.businessId || ""),
       slotName: String(data.slotName || ""),
       startDate: String(data.startDate || ""),
       hatchDate: String(data.hatchDate || ""),
