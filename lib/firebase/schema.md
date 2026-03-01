@@ -9,7 +9,7 @@
 - `invoicePrefix`: string
 - `createdAt`: timestamp
 
-### users/{uid}
+### users/{uid} (auth profile mapping)
 - `businessId`: string
 - `role`: "owner" | "manager" | "operator"
 - `phone`: string
@@ -19,8 +19,21 @@
 - `permissions`: object (e.g. `{ slots: "read" | "edit" | "none" }`)
 - `createdAt`: timestamp
 
-### farmers/{farmerId}
-- `businessId`: string
+## Business Subcollections
+All operational data is nested under each business:
+`businesses/{businessId}/{collection}/{docId}`
+
+### businesses/{businessId}/users/{userId}
+- `role`: "owner" | "manager" | "operator"
+- `phone`: string
+- `displayName`: string
+- `active`: boolean
+- `notes`: string
+- `permissions`: object
+- `createdAt`: timestamp
+- `updatedAt`: timestamp
+
+### businesses/{businessId}/farmers/{farmerId}
 - `name`: string
 - `phone`: string
 - `village`: string
@@ -28,8 +41,7 @@
 - `status`: "active" | "inactive"
 - `createdAt`: timestamp
 
-### slots/{slotId}
-- `businessId`: string
+### businesses/{businessId}/slots/{slotId}
 - `slotName`: string
 - `startDate`: string (`YYYY-MM-DD` currently in starter)
 - `hatchDate`: string (`YYYY-MM-DD` currently in starter)
@@ -39,8 +51,7 @@
 - `bookedQty`: number
 - `availableQty`: number
 
-### bookings/{bookingId}
-- `businessId`: string
+### businesses/{businessId}/bookings/{bookingId}
 - `slotId`: string
 - `farmerId`: string
 - `qtyBooked`: number
@@ -49,16 +60,14 @@
 - `bookingDate`: timestamp
 - `status`: "booked" | "dispatched" | "cancelled"
 
-### inventoryLedger/{entryId}
-- `businessId`: string
+### businesses/{businessId}/inventoryLedger/{entryId}
 - `slotId`: string
 - `type`: "egg_added" | "hatched" | "sold" | "wastage" | "adjustment"
 - `qty`: number
 - `note`: string
 - `createdAt`: timestamp
 
-### invoices/{invoiceId}
-- `businessId`: string
+### businesses/{businessId}/invoices/{invoiceId}
 - `farmerId`: string
 - `bookingIds`: string[]
 - `invoiceNo`: string
@@ -68,11 +77,13 @@
 - `dueAmount`: number
 - `status`: "draft" | "issued" | "partial" | "paid" | "overdue"
 
-### payments/{paymentId}
-- `businessId`: string
+### businesses/{businessId}/payments/{paymentId}
 - `invoiceId`: string
 - `farmerId`: string
 - `amount`: number
 - `paymentDate`: timestamp
 - `mode`: "cash" | "upi" | "bank"
 - `reference`: string
+
+### businesses/{businessId}/reports/{reportId}
+- report documents/snapshots for analytics

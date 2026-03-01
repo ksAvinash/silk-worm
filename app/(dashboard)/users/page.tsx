@@ -204,6 +204,7 @@ export default function UsersPage() {
     try {
       if (editingUser) {
         await updateTeamUser({
+          businessId: profile.businessId,
           userId: editingUser.id,
           ...payload
         });
@@ -227,11 +228,11 @@ export default function UsersPage() {
   };
 
   const handleDelete = async () => {
-    if (!deleteTarget) return;
+    if (!deleteTarget || !profile?.businessId) return;
     if (deleteTarget.role === "owner") return;
 
     try {
-      await removeTeamUser(deleteTarget.id);
+      await removeTeamUser(profile.businessId, deleteTarget.id);
       setStatus("User deleted.");
       setDeleteTarget(null);
       await loadUsers();
