@@ -53,7 +53,8 @@ async function ensureBusinessUserDoc(profile: UserProfile) {
       bookings: "edit",
       invoices: "edit",
       reports: "edit",
-      users: "edit"
+      users: "edit",
+      settings: "edit"
     },
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp()
@@ -95,7 +96,8 @@ async function createBusinessForOwner(user: User): Promise<UserProfile> {
       bookings: "edit",
       invoices: "edit",
       reports: "edit",
-      users: "edit"
+      users: "edit",
+      settings: "edit"
     },
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp()

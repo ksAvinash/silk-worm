@@ -34,7 +34,8 @@ const MODULES = [
   { id: "bookings", label: "Bookings" },
   { id: "invoices", label: "Invoices" },
   { id: "reports", label: "Reports" },
-  { id: "users", label: "Users" }
+  { id: "users", label: "Users" },
+  { id: "settings", label: "Settings" }
 ] as const;
 
 const EMPTY_PERMISSIONS: ModulePermissions = {
@@ -43,7 +44,8 @@ const EMPTY_PERMISSIONS: ModulePermissions = {
   bookings: "none",
   invoices: "none",
   reports: "none",
-  users: "none"
+  users: "none",
+  settings: "none"
 };
 
 interface UserFormState {

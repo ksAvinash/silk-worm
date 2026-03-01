@@ -1,6 +1,7 @@
 import {
   addDoc,
   deleteDoc,
+  getDoc,
   getDocs,
   serverTimestamp,
   updateDoc
@@ -75,6 +76,22 @@ export async function listUsersByBusiness(businessId: string): Promise<TeamUserR
     if (a.role !== "owner" && b.role === "owner") return 1;
     return a.displayName.localeCompare(b.displayName);
   });
+}
+
+export async function getTeamUserById(businessId: string, userId: string): Promise<TeamUserRecord | null> {
+  const snap = await getDoc(businessDoc(businessId, "users", userId));
+  if (!snap.exists()) return null;
+
+  const data = snap.data() as Partial<TeamUserRecord>;
+  return {
+    id: snap.id,
+    role: (data.role || "operator") as UserRole,
+    phone: String(data.phone || ""),
+    displayName: String(data.displayName || "User"),
+    active: data.active !== false,
+    notes: String(data.notes || ""),
+    permissions: normalizePermissions((data.permissions || {}) as ModulePermissions)
+  };
 }
 
 export async function createTeamUser(input: CreateTeamUserInput): Promise<string> {

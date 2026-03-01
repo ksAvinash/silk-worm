@@ -12,7 +12,8 @@ const quickActions = [
   { href: "/bookings", title: "Bookings", description: "Add farmer bookings quickly", accent: "#6b4a2f", bg: "#f7eee4" },
   { href: "/invoices", title: "Invoices", description: "Track bills and payment status", accent: "#2b6470", bg: "#e7f4f7" },
   { href: "/reports", title: "Reports", description: "See trends and summaries", accent: "#5d5b24", bg: "#f3f4df" },
-  { href: "/users", title: "Users", description: "Manage breeder team access", accent: "#4b5f2f", bg: "#edf4e3" }
+  { href: "/users", title: "Users", description: "Manage breeder team access", accent: "#4b5f2f", bg: "#edf4e3" },
+  { href: "/settings", title: "Settings", description: "Configure workspace defaults", accent: "#4a4f6a", bg: "#eceefb" }
 ] as const;
 
 function QuickIcon({ id }: { id: string }) {
@@ -58,6 +59,13 @@ function QuickIcon({ id }: { id: string }) {
           <circle cx="9" cy="8" r="3" {...shared} />
           <circle cx="17" cy="9" r="2.5" {...shared} />
           <path d="M2.8 19a6.2 6.2 0 0 1 12.4 0M13.8 19a4.6 4.6 0 0 1 7.4-3.7" {...shared} />
+        </svg>
+      );
+    case "/settings":
+      return (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="3" {...shared} />
+          <path d="M19.4 15a1 1 0 0 0 .2 1.1l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.9V20a2 2 0 1 1-4 0v-.1a1 1 0 0 0-.6-.9 1 1 0 0 0-1.1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1 1 0 0 0 .2-1.1 1 1 0 0 0-.9-.6H4a2 2 0 1 1 0-4h.1a1 1 0 0 0 .9-.6 1 1 0 0 0-.2-1.1l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1 1 0 0 0 1.1.2h.1a1 1 0 0 0 .6-.9V4a2 2 0 1 1 4 0v.1a1 1 0 0 0 .6.9h.1a1 1 0 0 0 1.1-.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1 1 0 0 0-.2 1.1v.1a1 1 0 0 0 .9.6H20a2 2 0 1 1 0 4h-.1a1 1 0 0 0-.9.6Z" {...shared} />
         </svg>
       );
     default:
