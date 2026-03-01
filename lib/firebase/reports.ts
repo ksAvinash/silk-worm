@@ -87,11 +87,25 @@ function asDateString(value: unknown) {
   if (value instanceof Timestamp) {
     return value.toDate().toISOString().slice(0, 10);
   }
+  if (value && typeof value === "object" && "toDate" in value && typeof (value as { toDate?: unknown }).toDate === "function") {
+    const date = (value as { toDate: () => Date }).toDate();
+    if (date instanceof Date && !Number.isNaN(date.getTime())) {
+      return date.toISOString().slice(0, 10);
+    }
+  }
   if (value instanceof Date) {
     return value.toISOString().slice(0, 10);
   }
   if (typeof value === "string") {
     return value.slice(0, 10);
+  }
+  return "";
+}
+
+function pickDateString(data: Record<string, unknown>, keys: string[]) {
+  for (const key of keys) {
+    const resolved = asDateString(data[key]);
+    if (resolved) return resolved;
   }
   return "";
 }
@@ -130,7 +144,7 @@ export async function getReportsPayload(businessId: string, month: string): Prom
       qtyBooked: asNumber(data.qtyBooked),
       subtotal: asNumber(data.subtotal),
       status: String(data.status || "booked").toLowerCase(),
-      bookingDate: asDateString(data.bookingDate)
+      bookingDate: pickDateString(data, ["bookingDate", "date", "createdAt", "updatedAt"])
     };
   });
 
@@ -141,7 +155,7 @@ export async function getReportsPayload(businessId: string, month: string): Prom
       paidAmount: asNumber(data.paidAmount),
       dueAmount: asNumber(data.dueAmount),
       status: String(data.status || "issued").toLowerCase(),
-      invoiceDate: asDateString(data.invoiceDate)
+      invoiceDate: pickDateString(data, ["invoiceDate", "date", "createdAt", "updatedAt"])
     };
   });
 
@@ -149,7 +163,7 @@ export async function getReportsPayload(businessId: string, month: string): Prom
     const data = row.data();
     return {
       amount: asNumber(data.amount),
-      paymentDate: asDateString(data.paymentDate)
+      paymentDate: pickDateString(data, ["paymentDate", "date", "createdAt", "updatedAt"])
     };
   });
 
