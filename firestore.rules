@@ -18,12 +18,26 @@ service cloud.firestore {
       return myProfile().businessId;
     }
 
-    function isMyBusiness(businessId) {
-      return hasUserProfile() && businessId == myBusinessId();
+    function businessDoc(businessId) {
+      return get(/databases/$(database)/documents/businesses/$(businessId)).data;
     }
 
-    function isOwnerOrManager() {
-      return hasUserProfile() && myProfile().role in ["owner", "manager"];
+    function isBusinessOwner(businessId) {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/businesses/$(businessId)) &&
+        businessDoc(businessId).ownerUid == request.auth.uid;
+    }
+
+    function isMyBusiness(businessId) {
+      return isBusinessOwner(businessId) || (hasUserProfile() && businessId == myBusinessId());
+    }
+
+    function isOwnerOrManager(businessId) {
+      return isBusinessOwner(businessId) || (
+        hasUserProfile() &&
+        businessId == myBusinessId() &&
+        myProfile().role in ["owner", "manager"]
+      );
     }
 
     // Auth profile mapping (global by uid)
@@ -41,26 +55,26 @@ service cloud.firestore {
     match /businesses/{businessId} {
       allow read: if isMyBusiness(businessId);
       allow create: if isSignedIn() && request.resource.data.ownerUid == request.auth.uid;
-      allow update: if isMyBusiness(businessId) && isOwnerOrManager();
+      allow update: if isMyBusiness(businessId) && isOwnerOrManager(businessId);
       allow delete: if false;
 
       // All business-owned data must live in these subcollections
       match /slots/{docId} {
         allow read: if isMyBusiness(businessId);
         allow create, update: if isMyBusiness(businessId);
-        allow delete: if isMyBusiness(businessId) && isOwnerOrManager();
+        allow delete: if isMyBusiness(businessId) && isOwnerOrManager(businessId);
       }
 
       match /farmers/{docId} {
         allow read: if isMyBusiness(businessId);
         allow create, update: if isMyBusiness(businessId);
-        allow delete: if isMyBusiness(businessId) && isOwnerOrManager();
+        allow delete: if isMyBusiness(businessId) && isOwnerOrManager(businessId);
       }
 
       match /bookings/{docId} {
         allow read: if isMyBusiness(businessId);
         allow create, update: if isMyBusiness(businessId);
-        allow delete: if isMyBusiness(businessId) && isOwnerOrManager();
+        allow delete: if isMyBusiness(businessId) && isOwnerOrManager(businessId);
       }
 
       match /inventoryLedger/{docId} {
@@ -71,17 +85,17 @@ service cloud.firestore {
 
       match /invoices/{docId} {
         allow read: if isMyBusiness(businessId);
-        allow create, update, delete: if isMyBusiness(businessId) && isOwnerOrManager();
+        allow create, update, delete: if isMyBusiness(businessId) && isOwnerOrManager(businessId);
       }
 
       match /payments/{docId} {
         allow read: if isMyBusiness(businessId);
-        allow create, update, delete: if isMyBusiness(businessId) && isOwnerOrManager();
+        allow create, update, delete: if isMyBusiness(businessId) && isOwnerOrManager(businessId);
       }
 
       match /reports/{docId} {
         allow read: if isMyBusiness(businessId);
-        allow create, update, delete: if isMyBusiness(businessId) && isOwnerOrManager();
+        allow create, update, delete: if isMyBusiness(businessId) && isOwnerOrManager(businessId);
       }
 
       match /users/{docId} {
@@ -89,22 +103,24 @@ service cloud.firestore {
         // Owners/managers manage team users.
         // A user can also create/update their own business user doc for bootstrap at login.
         allow create: if isMyBusiness(businessId) && (
-          isOwnerOrManager() ||
+          isOwnerOrManager(businessId) ||
           (
             isSignedIn() &&
+            hasUserProfile() &&
             request.auth.uid == docId &&
             request.resource.data.role == myProfile().role
           )
         );
         allow update: if isMyBusiness(businessId) && (
-          isOwnerOrManager() ||
+          isOwnerOrManager(businessId) ||
           (
             isSignedIn() &&
+            hasUserProfile() &&
             request.auth.uid == docId &&
             request.resource.data.role == resource.data.role
           )
         );
-        allow delete: if isMyBusiness(businessId) && isOwnerOrManager();
+        allow delete: if isMyBusiness(businessId) && isOwnerOrManager(businessId);
       }
     }
   }
