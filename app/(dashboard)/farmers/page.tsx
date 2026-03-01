@@ -304,6 +304,11 @@ export default function FarmersPage() {
               </label>
 
               <label className={styles.field}>
+                Village
+                <input value={village} onChange={(event) => setVillage(event.target.value)} placeholder="Village" />
+              </label>
+
+              <label className={styles.field}>
                 Phone
                 <input value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="+91XXXXXXXXXX" />
               </label>
@@ -311,11 +316,6 @@ export default function FarmersPage() {
               <label className={styles.field}>
                 Alt Phone
                 <input value={altPhone} onChange={(event) => setAltPhone(event.target.value)} placeholder="Optional" />
-              </label>
-
-              <label className={styles.field}>
-                Village
-                <input value={village} onChange={(event) => setVillage(event.target.value)} placeholder="Village" />
               </label>
 
               <label className={styles.field}>
@@ -378,6 +378,11 @@ export default function FarmersPage() {
               </label>
 
               <label className={styles.field}>
+                Village
+                <input value={village} onChange={(event) => setVillage(event.target.value)} />
+              </label>
+
+              <label className={styles.field}>
                 Phone
                 <input value={phone} onChange={(event) => setPhone(event.target.value)} />
               </label>
@@ -385,11 +390,6 @@ export default function FarmersPage() {
               <label className={styles.field}>
                 Alt Phone
                 <input value={altPhone} onChange={(event) => setAltPhone(event.target.value)} />
-              </label>
-
-              <label className={styles.field}>
-                Village
-                <input value={village} onChange={(event) => setVillage(event.target.value)} />
               </label>
 
               <label className={styles.field}>

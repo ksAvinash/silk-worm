@@ -12,7 +12,6 @@ import styles from "./bookings.module.css";
 
 const statusOptions: DropdownOption[] = [
   { label: "Booked", value: "booked" },
-  { label: "Dispatched", value: "dispatched" },
   { label: "Cancelled", value: "cancelled" }
 ];
 
@@ -24,6 +23,14 @@ function statusClass(status: BookingStatus) {
 
 function formatNumber(value: number) {
   return new Intl.NumberFormat("en-IN").format(value || 0);
+}
+
+function todayIsoDate() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  const d = String(now.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
 }
 
 export default function BookingsPage() {
@@ -42,7 +49,7 @@ export default function BookingsPage() {
   const [farmerId, setFarmerId] = useState("");
   const [qtyBooked, setQtyBooked] = useState("0");
   const [ratePerWorm, setRatePerWorm] = useState("0");
-  const [bookingDate, setBookingDate] = useState("");
+  const [bookingDate, setBookingDate] = useState(todayIsoDate());
   const [bookingStatus, setBookingStatus] = useState<BookingStatus>("booked");
 
   const refreshData = useCallback(async () => {
@@ -76,7 +83,7 @@ export default function BookingsPage() {
     setFarmerId("");
     setQtyBooked("0");
     setRatePerWorm("0");
-    setBookingDate("");
+    setBookingDate(todayIsoDate());
     setBookingStatus("booked");
   };
 
@@ -252,6 +259,11 @@ export default function BookingsPage() {
               }}
             >
               <label className={styles.field}>
+                Booking Date
+                <CustomDatePicker value={bookingDate} onChange={setBookingDate} placeholder="Select booking date" />
+              </label>
+
+              <label className={styles.field}>
                 Slot
                 <CustomDropdown options={slotOptions} value={slotId} onChange={setSlotId} placeholder="Select slot" />
               </label>
@@ -259,11 +271,6 @@ export default function BookingsPage() {
               <label className={styles.field}>
                 Farmer
                 <CustomDropdown options={farmerOptions} value={farmerId} onChange={setFarmerId} placeholder="Select farmer" />
-              </label>
-
-              <label className={styles.field}>
-                Booking Date
-                <CustomDatePicker value={bookingDate} onChange={setBookingDate} placeholder="Select booking date" />
               </label>
 
               <label className={styles.field}>
