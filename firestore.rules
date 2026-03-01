@@ -1,123 +1,92 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    function isSignedIn() {
-      return request.auth != null;
+
+    // Is the caller signed in with a valid businessId token claim matching this business?
+    function isMember(businessId) {
+      return request.auth != null &&
+        request.auth.token.businessId is string &&
+        request.auth.token.businessId == businessId;
     }
 
-    function tokenBusinessId() {
-      return isSignedIn() && request.auth.token.businessId is string
-        ? request.auth.token.businessId
-        : "";
-    }
-
-    function tokenRole() {
-      return isSignedIn() && request.auth.token.role is string
-        ? request.auth.token.role
-        : "";
-    }
-
-    function businessDoc(businessId) {
-      return get(/databases/$(database)/documents/businesses/$(businessId)).data;
-    }
-
-    function isBusinessOwner(businessId) {
-      return isSignedIn() &&
-        exists(/databases/$(database)/documents/businesses/$(businessId)) &&
-        businessDoc(businessId).ownerUid == request.auth.uid;
-    }
-
-    function isMyBusiness(businessId) {
-      return isBusinessOwner(businessId) || (isSignedIn() && businessId == tokenBusinessId());
-    }
-
+    // Same as above but also owner or manager role.
     function isOwnerOrManager(businessId) {
-      return isBusinessOwner(businessId) || (
-        isSignedIn() &&
-        businessId == tokenBusinessId() &&
-        tokenRole() in ["owner", "manager"]
-      );
+      return isMember(businessId) &&
+        request.auth.token.role in ["owner", "manager"];
     }
 
-    // Auth profile mapping (global by uid)
+    // Global user profile (uid-keyed, holds businessId + role for claim bootstrap).
     match /users/{userId} {
-      allow read: if isSignedIn() && request.auth.uid == userId;
-      allow create: if isSignedIn() && request.auth.uid == userId;
-      allow update: if isSignedIn() &&
+      allow read:   if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update: if request.auth != null &&
         request.auth.uid == userId &&
         request.resource.data.businessId == resource.data.businessId &&
         request.resource.data.role == resource.data.role;
       allow delete: if false;
     }
 
-    // Business root document
+    // Business workspace root.
     match /businesses/{businessId} {
-      allow read: if isMyBusiness(businessId);
-      allow create: if isSignedIn() && request.resource.data.ownerUid == request.auth.uid;
-      allow update: if isMyBusiness(businessId) && isOwnerOrManager(businessId);
+      allow read:   if isMember(businessId);
+      allow create: if request.auth != null && request.resource.data.ownerUid == request.auth.uid;
+      allow update: if isOwnerOrManager(businessId);
       allow delete: if false;
 
-      // All business-owned data must live in these subcollections
       match /slots/{docId} {
-        allow read: if isMyBusiness(businessId);
-        allow create, update: if isMyBusiness(businessId);
-        allow delete: if isMyBusiness(businessId) && isOwnerOrManager(businessId);
+        allow read:           if isMember(businessId);
+        allow create, update: if isMember(businessId);
+        allow delete:         if isOwnerOrManager(businessId);
       }
 
       match /farmers/{docId} {
-        allow read: if isMyBusiness(businessId);
-        allow create, update: if isMyBusiness(businessId);
-        allow delete: if isMyBusiness(businessId) && isOwnerOrManager(businessId);
+        allow read:           if isMember(businessId);
+        allow create, update: if isMember(businessId);
+        allow delete:         if isOwnerOrManager(businessId);
       }
 
       match /bookings/{docId} {
-        allow read: if isMyBusiness(businessId);
-        allow create, update: if isMyBusiness(businessId);
-        allow delete: if isMyBusiness(businessId) && isOwnerOrManager(businessId);
+        allow read:           if isMember(businessId);
+        allow create, update: if isMember(businessId);
+        allow delete:         if isOwnerOrManager(businessId);
       }
 
       match /inventoryLedger/{docId} {
-        allow read: if isMyBusiness(businessId);
-        allow create, update: if isMyBusiness(businessId);
-        allow delete: if false;
+        allow read:           if isMember(businessId);
+        allow create, update: if isMember(businessId);
+        allow delete:         if false;
       }
 
       match /invoices/{docId} {
-        allow read: if isMyBusiness(businessId);
-        allow create, update, delete: if isMyBusiness(businessId) && isOwnerOrManager(businessId);
+        allow read:                   if isMember(businessId);
+        allow create, update, delete: if isOwnerOrManager(businessId);
       }
 
       match /payments/{docId} {
-        allow read: if isMyBusiness(businessId);
-        allow create, update, delete: if isMyBusiness(businessId) && isOwnerOrManager(businessId);
+        allow read:                   if isMember(businessId);
+        allow create, update, delete: if isOwnerOrManager(businessId);
       }
 
       match /reports/{docId} {
-        allow read: if isMyBusiness(businessId);
-        allow create, update, delete: if isMyBusiness(businessId) && isOwnerOrManager(businessId);
+        allow read:                   if isMember(businessId);
+        allow create, update, delete: if isOwnerOrManager(businessId);
       }
 
       match /users/{docId} {
-        allow read: if isMyBusiness(businessId);
-        // Owners/managers manage team users.
-        // A user can also create/update their own business user doc for bootstrap at login.
-        allow create: if isMyBusiness(businessId) && (
-          isOwnerOrManager(businessId) ||
-          (
-            isSignedIn() &&
-            request.auth.uid == docId &&
-            request.resource.data.role in ["owner", "manager", "operator"]
-          )
+        allow read:   if isMember(businessId);
+        // isOwnerOrManager covers claim-bearing sessions.
+        // The claim-free path covers first-login bootstrap (owner writing their own doc before claims are set).
+        allow create: if isOwnerOrManager(businessId) || (
+          request.auth != null &&
+          request.auth.uid == docId &&
+          request.resource.data.role in ["owner", "manager", "operator"]
         );
-        allow update: if isMyBusiness(businessId) && (
-          isOwnerOrManager(businessId) ||
-          (
-            isSignedIn() &&
-            request.auth.uid == docId &&
-            request.resource.data.role == resource.data.role
-          )
+        allow update: if isOwnerOrManager(businessId) || (
+          isMember(businessId) &&
+          request.auth.uid == docId &&
+          request.resource.data.role == resource.data.role
         );
-        allow delete: if isMyBusiness(businessId) && isOwnerOrManager(businessId);
+        allow delete: if isOwnerOrManager(businessId);
       }
     }
   }
