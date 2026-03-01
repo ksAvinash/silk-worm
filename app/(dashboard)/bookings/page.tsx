@@ -5,7 +5,7 @@ import CustomDatePicker from "@/components/ui/CustomDatePicker";
 import CustomDropdown, { type DropdownOption } from "@/components/ui/CustomDropdown";
 import SearchInput from "@/components/ui/SearchInput";
 import { useAuth } from "@/components/AuthProvider";
-import { createBooking, listBookingsByBusiness, type BookingRecord, type BookingStatus } from "@/lib/firebase/bookings";
+import { createBooking, listBookingsByBusiness, updateBooking, type BookingRecord, type BookingStatus } from "@/lib/firebase/bookings";
 import { listSlotsByBusiness, type SlotRecord } from "@/lib/firebase/slots";
 import { listFarmersByBusiness, type FarmerRecord } from "@/lib/firebase/farmers";
 import styles from "./bookings.module.css";
@@ -43,6 +43,7 @@ export default function BookingsPage() {
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState("Loading...");
   const [showForm, setShowForm] = useState(false);
+  const [editingBooking, setEditingBooking] = useState<BookingRecord | null>(null);
   const [searchText, setSearchText] = useState("");
 
   const [slotId, setSlotId] = useState("");
@@ -51,6 +52,13 @@ export default function BookingsPage() {
   const [ratePerWorm, setRatePerWorm] = useState("0");
   const [bookingDate, setBookingDate] = useState(todayIsoDate());
   const [bookingStatus, setBookingStatus] = useState<BookingStatus>("booked");
+
+  const [editSlotId, setEditSlotId] = useState("");
+  const [editFarmerId, setEditFarmerId] = useState("");
+  const [editQtyBooked, setEditQtyBooked] = useState("0");
+  const [editRatePerWorm, setEditRatePerWorm] = useState("0");
+  const [editBookingDate, setEditBookingDate] = useState(todayIsoDate());
+  const [editBookingStatus, setEditBookingStatus] = useState<BookingStatus>("booked");
 
   const refreshData = useCallback(async () => {
     if (!profile?.businessId) return;
@@ -109,6 +117,8 @@ export default function BookingsPage() {
   const farmerNameById = useMemo(() => new Map(farmers.map((farmer) => [farmer.id, farmer.name])), [farmers]);
   const selectedSlot = useMemo(() => slots.find((slot) => slot.id === slotId) || null, [slotId, slots]);
   const selectedFarmer = useMemo(() => farmers.find((farmer) => farmer.id === farmerId) || null, [farmerId, farmers]);
+  const selectedEditSlot = useMemo(() => slots.find((slot) => slot.id === editSlotId) || null, [editSlotId, slots]);
+  const selectedEditFarmer = useMemo(() => farmers.find((farmer) => farmer.id === editFarmerId) || null, [editFarmerId, farmers]);
 
   useEffect(() => {
     if (!farmerId) {
@@ -118,6 +128,26 @@ export default function BookingsPage() {
 
     setRatePerWorm(String(selectedFarmer?.ratePerWorm || 0));
   }, [farmerId, selectedFarmer?.ratePerWorm]);
+
+  useEffect(() => {
+    if (!editingBooking) return;
+
+    if (!editFarmerId) {
+      setEditRatePerWorm("0");
+      return;
+    }
+
+    setEditRatePerWorm(String(selectedEditFarmer?.ratePerWorm || 0));
+  }, [editFarmerId, editingBooking, selectedEditFarmer?.ratePerWorm]);
+
+  const editSlotOptions = useMemo<DropdownOption[]>(() => {
+    return slots
+      .filter((slot) => slot.id === editSlotId || (slot.status === "open" && slot.availableQty > 0))
+      .map((slot) => ({
+        value: slot.id,
+        label: `${slot.slotName} (avail ${formatNumber(slot.availableQty)})`
+      }));
+  }, [editSlotId, slots]);
 
   const filteredBookings = useMemo(() => {
     const query = searchText.trim().toLowerCase();
@@ -170,6 +200,45 @@ export default function BookingsPage() {
     }
   };
 
+  const openEditModal = (booking: BookingRecord) => {
+    setEditingBooking(booking);
+    setEditSlotId(booking.slotId);
+    setEditFarmerId(booking.farmerId);
+    setEditQtyBooked(String(booking.qtyBooked || 0));
+    setEditRatePerWorm(String(booking.ratePerWorm || 0));
+    setEditBookingDate(booking.bookingDate || todayIsoDate());
+    setEditBookingStatus(booking.status === "cancelled" ? "cancelled" : "booked");
+  };
+
+  const handleUpdateBooking = async () => {
+    if (!profile?.businessId || !editingBooking) return;
+
+    const qty = Number(editQtyBooked || 0);
+    if (!editSlotId || !editFarmerId || !editBookingDate || qty <= 0) {
+      setStatus("Select slot/farmer/date and enter a valid quantity.");
+      return;
+    }
+
+    try {
+      await updateBooking({
+        businessId: profile.businessId,
+        bookingId: editingBooking.id,
+        slotId: editSlotId,
+        farmerId: editFarmerId,
+        qtyBooked: qty,
+        ratePerWorm: Number(editRatePerWorm || 0),
+        bookingDate: editBookingDate,
+        status: editBookingStatus
+      });
+
+      setStatus("Booking updated.");
+      setEditingBooking(null);
+      await refreshData();
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Could not update booking. Please try again.");
+    }
+  };
+
   return (
     <div className={styles.page}>
       <header className={styles.header}>
@@ -217,6 +286,7 @@ export default function BookingsPage() {
                   <th>Rate</th>
                   <th>Subtotal</th>
                   <th>Status</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -232,6 +302,19 @@ export default function BookingsPage() {
                     <td data-label="Subtotal">{formatNumber(booking.subtotal)}</td>
                     <td data-label="Status">
                       <span className={`${styles.statusPill} ${statusClass(booking.status)}`}>{booking.status}</span>
+                    </td>
+                    <td data-label="Actions" className={styles.rowActions}>
+                      <div className={styles.inlineActions}>
+                        <button
+                          type="button"
+                          className={styles.editBtn}
+                          onClick={() => openEditModal(booking)}
+                          aria-label={`Edit booking ${booking.id}`}
+                          title="Edit"
+                        >
+                          <span className={styles.editIcon}>✎</span>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -299,6 +382,83 @@ export default function BookingsPage() {
                   Cancel
                 </button>
                 <button type="submit">Create Booking</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
+
+      {editingBooking ? (
+        <div className={styles.modalOverlay} onClick={() => setEditingBooking(null)}>
+          <div className={styles.modal} onClick={(event) => event.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h2>Edit Booking</h2>
+              <button type="button" className={styles.closeBtn} onClick={() => setEditingBooking(null)}>
+                ✕
+              </button>
+            </div>
+
+            <form
+              className={styles.form}
+              onSubmit={(event) => {
+                event.preventDefault();
+                void handleUpdateBooking();
+              }}
+            >
+              <label className={styles.field}>
+                Booking Date
+                <CustomDatePicker value={editBookingDate} onChange={setEditBookingDate} placeholder="Select booking date" />
+              </label>
+
+              <label className={styles.field}>
+                Slot
+                <CustomDropdown options={editSlotOptions} value={editSlotId} onChange={setEditSlotId} placeholder="Select slot" />
+              </label>
+
+              <label className={styles.field}>
+                Farmer
+                <CustomDropdown options={farmerOptions} value={editFarmerId} onChange={setEditFarmerId} placeholder="Select farmer" />
+              </label>
+
+              <label className={styles.field}>
+                Quantity
+                <input
+                  type="number"
+                  min={1}
+                  step={1}
+                  value={editQtyBooked}
+                  onChange={(event) => setEditQtyBooked(event.target.value)}
+                  required
+                />
+              </label>
+
+              <label className={styles.field}>
+                Rate per Worm
+                <input
+                  type="number"
+                  min={0}
+                  step={1}
+                  value={editRatePerWorm}
+                  onChange={(event) => setEditRatePerWorm(event.target.value)}
+                />
+              </label>
+
+              <label className={styles.field}>
+                Status
+                <CustomDropdown
+                  options={statusOptions}
+                  value={editBookingStatus}
+                  onChange={(next) => setEditBookingStatus(next as BookingStatus)}
+                />
+              </label>
+
+              <p className={styles.hint}>Available in selected slot: {formatNumber(selectedEditSlot?.availableQty || 0)}</p>
+
+              <div className={styles.actions}>
+                <button type="button" className={styles.secondaryBtn} onClick={() => setEditingBooking(null)}>
+                  Cancel
+                </button>
+                <button type="submit">Update Booking</button>
               </div>
             </form>
           </div>
