@@ -18,6 +18,7 @@ export interface FarmerRecord {
   altPhone: string;
   village: string;
   address: string;
+  ratePerWorm: number;
   status: FarmerStatus;
   notes: string;
 }
@@ -29,6 +30,7 @@ interface CreateFarmerInput {
   altPhone: string;
   village: string;
   address: string;
+  ratePerWorm: number;
   status?: FarmerStatus;
   notes?: string;
 }
@@ -41,6 +43,7 @@ interface UpdateFarmerInput {
   altPhone: string;
   village: string;
   address: string;
+  ratePerWorm: number;
   status: FarmerStatus;
   notes: string;
 }
@@ -63,6 +66,7 @@ export async function listFarmersByBusiness(businessId: string): Promise<FarmerR
       altPhone: String(data.altPhone || ""),
       village: String(data.village || ""),
       address: String(data.address || ""),
+      ratePerWorm: Number(data.ratePerWorm || 0),
       status: normalizeStatus(data.status),
       notes: String(data.notes || "")
     };
@@ -76,6 +80,7 @@ export async function createFarmer(input: CreateFarmerInput): Promise<void> {
     altPhone: input.altPhone.trim(),
     village: input.village.trim(),
     address: input.address.trim(),
+    ratePerWorm: Number(input.ratePerWorm || 0),
     status: input.status || "active",
     notes: String(input.notes || "").trim(),
     createdAt: serverTimestamp(),
@@ -90,6 +95,7 @@ export async function updateFarmer(input: UpdateFarmerInput): Promise<void> {
     altPhone: input.altPhone.trim(),
     village: input.village.trim(),
     address: input.address.trim(),
+    ratePerWorm: Number(input.ratePerWorm || 0),
     status: input.status,
     notes: input.notes.trim(),
     updatedAt: serverTimestamp()

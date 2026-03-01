@@ -101,6 +101,16 @@ export default function BookingsPage() {
   const slotNameById = useMemo(() => new Map(slots.map((slot) => [slot.id, slot.slotName])), [slots]);
   const farmerNameById = useMemo(() => new Map(farmers.map((farmer) => [farmer.id, farmer.name])), [farmers]);
   const selectedSlot = useMemo(() => slots.find((slot) => slot.id === slotId) || null, [slotId, slots]);
+  const selectedFarmer = useMemo(() => farmers.find((farmer) => farmer.id === farmerId) || null, [farmerId, farmers]);
+
+  useEffect(() => {
+    if (!farmerId) {
+      setRatePerWorm("0");
+      return;
+    }
+
+    setRatePerWorm(String(selectedFarmer?.ratePerWorm || 0));
+  }, [farmerId, selectedFarmer?.ratePerWorm]);
 
   const filteredBookings = useMemo(() => {
     const query = searchText.trim().toLowerCase();

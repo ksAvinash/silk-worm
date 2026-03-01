@@ -38,6 +38,7 @@ export default function FarmersPage() {
   const [altPhone, setAltPhone] = useState("");
   const [village, setVillage] = useState("");
   const [address, setAddress] = useState("");
+  const [ratePerWorm, setRatePerWorm] = useState("0");
   const [farmerStatus, setFarmerStatus] = useState<FarmerStatus>("active");
   const [notes, setNotes] = useState("");
 
@@ -69,6 +70,7 @@ export default function FarmersPage() {
     setAltPhone("");
     setVillage("");
     setAddress("");
+    setRatePerWorm("0");
     setFarmerStatus("active");
     setNotes("");
   };
@@ -76,6 +78,12 @@ export default function FarmersPage() {
   const isValid = () => {
     if (!name.trim()) {
       setStatus("Farmer name is required.");
+      return false;
+    }
+
+    const rate = Number(ratePerWorm || 0);
+    if (!Number.isFinite(rate) || rate < 0) {
+      setStatus("Rate per worm must be zero or more.");
       return false;
     }
 
@@ -93,6 +101,7 @@ export default function FarmersPage() {
         altPhone,
         village,
         address,
+        ratePerWorm: Number(ratePerWorm || 0),
         status: farmerStatus,
         notes
       });
@@ -113,6 +122,7 @@ export default function FarmersPage() {
     setAltPhone(farmer.altPhone || "");
     setVillage(farmer.village);
     setAddress(farmer.address || "");
+    setRatePerWorm(String(farmer.ratePerWorm || 0));
     setFarmerStatus(farmer.status);
     setNotes(farmer.notes || "");
   };
@@ -129,6 +139,7 @@ export default function FarmersPage() {
         altPhone,
         village,
         address,
+        ratePerWorm: Number(ratePerWorm || 0),
         status: farmerStatus,
         notes
       });
@@ -166,6 +177,7 @@ export default function FarmersPage() {
         farmer.altPhone.toLowerCase().includes(query) ||
         farmer.village.toLowerCase().includes(query) ||
         farmer.address.toLowerCase().includes(query) ||
+        String(farmer.ratePerWorm).includes(query) ||
         farmer.status.toLowerCase().includes(query)
       );
     });
@@ -220,6 +232,7 @@ export default function FarmersPage() {
                   <th>Alt Phone</th>
                   <th>Village</th>
                   <th>Address</th>
+                  <th>Rate / Worm</th>
                   <th>Status</th>
                   <th>Actions</th>
                 </tr>
@@ -234,6 +247,7 @@ export default function FarmersPage() {
                     <td data-label="Alt Phone">{farmer.altPhone || "-"}</td>
                     <td data-label="Village">{farmer.village || "-"}</td>
                     <td data-label="Address">{farmer.address || "-"}</td>
+                    <td data-label="Rate / Worm">{farmer.ratePerWorm}</td>
                     <td data-label="Status">
                       <span className={`${styles.statusPill} ${statusClass(farmer.status)}`}>{farmer.status}</span>
                     </td>
@@ -310,6 +324,17 @@ export default function FarmersPage() {
               </label>
 
               <label className={styles.field}>
+                Rate per Worm
+                <input
+                  type="number"
+                  min={0}
+                  step={1}
+                  value={ratePerWorm}
+                  onChange={(event) => setRatePerWorm(event.target.value)}
+                />
+              </label>
+
+              <label className={styles.field}>
                 Status
                 <CustomDropdown options={statusOptions} value={farmerStatus} onChange={(next) => setFarmerStatus(next as FarmerStatus)} />
               </label>
@@ -370,6 +395,17 @@ export default function FarmersPage() {
               <label className={styles.field}>
                 Address
                 <textarea value={address} onChange={(event) => setAddress(event.target.value)} />
+              </label>
+
+              <label className={styles.field}>
+                Rate per Worm
+                <input
+                  type="number"
+                  min={0}
+                  step={1}
+                  value={ratePerWorm}
+                  onChange={(event) => setRatePerWorm(event.target.value)}
+                />
               </label>
 
               <label className={styles.field}>
