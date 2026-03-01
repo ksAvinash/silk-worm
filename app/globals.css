@@ -341,6 +341,25 @@ h4 {
   padding: 28px 8vw 40px;
 }
 
+.workspace-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--page-muted);
+  margin-bottom: 12px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.workspace-back-link:hover {
+  color: var(--page-ink);
+}
+
 .workspace-topbar {
   display: flex;
   align-items: flex-start;
@@ -706,6 +725,10 @@ button:disabled {
 
   .workspace-page {
     padding: 16px 14px calc(88px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .workspace-back-link {
+    margin-bottom: 10px;
   }
 
   .workspace-topbar {
