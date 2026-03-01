@@ -13,7 +13,7 @@ const quickActions = [
   { href: "/invoices", title: "Invoices", description: "Track bills and payment status", accent: "#2b6470", bg: "#e7f4f7" },
   { href: "/reports", title: "Reports", description: "See trends and summaries", accent: "#5d5b24", bg: "#f3f4df" },
   { href: "/users", title: "Users", description: "Manage breeder team access", accent: "#4b5f2f", bg: "#edf4e3" },
-  { href: "/settings", title: "Settings", description: "Configure workspace defaults", accent: "#4a4f6a", bg: "#eceefb" }
+  { href: "/settings", title: "Settings", description: "Update Business Settings", accent: "#4a4f6a", bg: "#eceefb" }
 ] as const;
 
 function QuickIcon({ id }: { id: string }) {
