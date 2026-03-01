@@ -47,37 +47,32 @@ export default function LoginPage() {
   };
 
   return (
-    <main style={{ maxWidth: 520, margin: "64px auto", padding: 20 }}>
-      <h1>Login</h1>
-      <div className="card">
-        <p className="muted">Use your phone number to sign in.</p>
-        <label htmlFor="phone">Phone (+country code)</label>
-        <input
-          id="phone"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          style={{ width: "100%" }}
-          disabled={busy}
-        />
-        <button onClick={sendOtp} style={{ marginTop: 10 }} disabled={busy || !phone.trim()}>
-          Send Code
-        </button>
-      </div>
-      <div className="card">
-        <label htmlFor="otp">Verification Code</label>
-        <input
-          id="otp"
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
-          style={{ width: "100%" }}
-          disabled={busy}
-        />
-        <button onClick={submitOtp} style={{ marginTop: 10 }} disabled={busy || !code.trim()}>
-          Verify Code
-        </button>
-      </div>
-      <p className="muted">{status}</p>
-      <div id="recaptcha-container" />
+    <main className="auth-page">
+      <section className="auth-card">
+        <header className="auth-head">
+          <h1>Login</h1>
+          <p>Use your phone number to continue.</p>
+        </header>
+
+        <div className="auth-field">
+          <label htmlFor="phone">Phone (+country code)</label>
+          <input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} disabled={busy} />
+          <button onClick={sendOtp} disabled={busy || !phone.trim()}>
+            Send Code
+          </button>
+        </div>
+
+        <div className="auth-field">
+          <label htmlFor="otp">Verification Code</label>
+          <input id="otp" value={code} onChange={(e) => setCode(e.target.value)} disabled={busy} />
+          <button onClick={submitOtp} disabled={busy || !code.trim()}>
+            Verify Code
+          </button>
+        </div>
+
+        <p className="muted">{status}</p>
+        <div id="recaptcha-container" className="auth-recaptcha" />
+      </section>
     </main>
   );
 }
