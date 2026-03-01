@@ -24,10 +24,23 @@ NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
 NEXT_PUBLIC_FIREBASE_APP_ID=
 NEXT_PUBLIC_BASE_PATH=
+NEXT_PUBLIC_FIREBASE_FUNCTIONS_REGION=asia-south1
 ```
 3. Run dev:
 ```bash
 npm run dev
+```
+
+## Custom Claims (business + role)
+- Callable function: `syncBusinessRoleClaim`
+- Source: `functions/custom-claims`
+- Claims set on authenticated user token: `businessId`, `role`
+
+Deploy function dependencies and function:
+```bash
+cd functions/custom-claims && npm install
+cd ../..
+firebase deploy --only functions
 ```
 
 ## Deployment (GitHub Pages)

@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { onAuthStateChanged, signOut, User } from "firebase/auth";
 import { auth } from "@/lib/firebase/config";
 import { ensureUserProfile, getBusinessProfile, type BusinessProfile, type UserProfile } from "@/lib/firebase/tenant";
+import { syncBusinessRoleClaims } from "@/lib/firebase/claims";
 
 interface AuthContextValue {
   user: User | null;
@@ -36,6 +37,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const nextProfile = await ensureUserProfile(nextUser);
         setProfile(nextProfile);
+
+        try {
+          await syncBusinessRoleClaims(nextUser, nextProfile);
+        } catch (claimError) {
+          console.warn("Failed to sync auth claims", claimError);
+        }
 
         const nextBusiness = await getBusinessProfile(nextProfile.businessId);
         setBusiness(nextBusiness);
