@@ -5,17 +5,16 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function hasUserProfile() {
-      return isSignedIn() &&
-        exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    function tokenBusinessId() {
+      return isSignedIn() && request.auth.token.businessId is string
+        ? request.auth.token.businessId
+        : "";
     }
 
-    function myProfile() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
-    }
-
-    function myBusinessId() {
-      return myProfile().businessId;
+    function tokenRole() {
+      return isSignedIn() && request.auth.token.role is string
+        ? request.auth.token.role
+        : "";
     }
 
     function businessDoc(businessId) {
@@ -29,14 +28,14 @@ service cloud.firestore {
     }
 
     function isMyBusiness(businessId) {
-      return isBusinessOwner(businessId) || (hasUserProfile() && businessId == myBusinessId());
+      return isBusinessOwner(businessId) || (isSignedIn() && businessId == tokenBusinessId());
     }
 
     function isOwnerOrManager(businessId) {
       return isBusinessOwner(businessId) || (
-        hasUserProfile() &&
-        businessId == myBusinessId() &&
-        myProfile().role in ["owner", "manager"]
+        isSignedIn() &&
+        businessId == tokenBusinessId() &&
+        tokenRole() in ["owner", "manager"]
       );
     }
 
@@ -106,16 +105,14 @@ service cloud.firestore {
           isOwnerOrManager(businessId) ||
           (
             isSignedIn() &&
-            hasUserProfile() &&
             request.auth.uid == docId &&
-            request.resource.data.role == myProfile().role
+            request.resource.data.role in ["owner", "manager", "operator"]
           )
         );
         allow update: if isMyBusiness(businessId) && (
           isOwnerOrManager(businessId) ||
           (
             isSignedIn() &&
-            hasUserProfile() &&
             request.auth.uid == docId &&
             request.resource.data.role == resource.data.role
           )
