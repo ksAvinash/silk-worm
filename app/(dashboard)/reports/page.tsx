@@ -158,10 +158,10 @@ export default function ReportsPage() {
 
               {report.farmerBreakdown.map((row) => (
                 <div key={row.farmerId} className={styles.tableRow}>
-                  <span>{row.farmerName}</span>
-                  <span>{formatNumber(row.bookings)}</span>
-                  <span>{formatNumber(row.quantity)}</span>
-                  <span>{formatCurrency(row.revenue)}</span>
+                  <span data-label="Farmer">{row.farmerName}</span>
+                  <span data-label="Orders">{formatNumber(row.bookings)}</span>
+                  <span data-label="Qty">{formatNumber(row.quantity)}</span>
+                  <span data-label="Revenue">{formatCurrency(row.revenue)}</span>
                 </div>
               ))}
             </div>
@@ -187,11 +187,11 @@ export default function ReportsPage() {
 
               {report.slotUtilization.map((row) => (
                 <div key={row.slotId} className={styles.tableRow}>
-                  <span>{row.slotName}</span>
-                  <span>{formatNumber(row.capacity)}</span>
-                  <span>{formatNumber(row.booked)}</span>
-                  <span>{formatNumber(row.balance)}</span>
-                  <span>
+                  <span data-label="Slot">{row.slotName}</span>
+                  <span data-label="Capacity">{formatNumber(row.capacity)}</span>
+                  <span data-label="Booked">{formatNumber(row.booked)}</span>
+                  <span data-label="Balance">{formatNumber(row.balance)}</span>
+                  <span data-label="Utilization">
                     {row.utilizationPercent}% <span className={styles.pill}>{row.status}</span>
                   </span>
                 </div>
