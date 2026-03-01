@@ -1,71 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
-import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { getTeamUserById, type ModulePermissions, type PermissionLevel } from "@/lib/firebase/users";
+import { updateBusinessSettings } from "@/lib/firebase/tenant";
 import styles from "./settings.module.css";
-
-const MODULES = ["slots", "farmers", "bookings", "invoices", "reports", "users", "settings"] as const;
-type ModuleKey = (typeof MODULES)[number];
-
-const quickActions: Array<{
-  href: string;
-  title: string;
-  description: string;
-  module: ModuleKey;
-  accent: string;
-  bg: string;
-}> = [
-  {
-    href: "/users",
-    title: "Users & Permissions",
-    description: "Manage team roles and module access.",
-    module: "users",
-    accent: "#4b5f2f",
-    bg: "#edf4e3"
-  },
-  {
-    href: "/slots",
-    title: "Slot Management",
-    description: "Configure slot lifecycle and capacity.",
-    module: "slots",
-    accent: "#2f6b3c",
-    bg: "#e9f5e7"
-  },
-  {
-    href: "/farmers",
-    title: "Farmer Registry",
-    description: "Maintain farmer records and rates.",
-    module: "farmers",
-    accent: "#7a4f2f",
-    bg: "#f8efe6"
-  },
-  {
-    href: "/bookings",
-    title: "Booking Controls",
-    description: "Track slot bookings and quantities.",
-    module: "bookings",
-    accent: "#6b4a2f",
-    bg: "#f7eee4"
-  },
-  {
-    href: "/invoices",
-    title: "Invoice Operations",
-    description: "Review invoices and payment status.",
-    module: "invoices",
-    accent: "#2b6470",
-    bg: "#e7f4f7"
-  },
-  {
-    href: "/reports",
-    title: "Reports",
-    description: "Analyze trends and monthly performance.",
-    module: "reports",
-    accent: "#5d5b24",
-    bg: "#f3f4df"
-  }
-];
 
 const EMPTY_PERMISSIONS: ModulePermissions = {
   slots: "none",
@@ -77,21 +16,63 @@ const EMPTY_PERMISSIONS: ModulePermissions = {
   settings: "none"
 };
 
-function levelLabel(level: PermissionLevel) {
-  if (level === "edit") return "Edit";
-  if (level === "read") return "Read";
-  return "None";
+interface SettingsFormState {
+  businessName: string;
+  invoicePrefix: string;
+  slotFrequencyDays: string;
+  logoUrl: string;
+  language: string;
+  addressLine1: string;
+  addressLine2: string;
+  city: string;
+  state: string;
+  pincode: string;
+  country: string;
+  accountName: string;
+  bankName: string;
+  accountNumber: string;
+  ifscCode: string;
+  branch: string;
+  upiId: string;
 }
 
 function hasRead(level: PermissionLevel) {
   return level === "read" || level === "edit";
 }
 
+function hasEdit(level: PermissionLevel) {
+  return level === "edit";
+}
+
+function buildInitialForm(): SettingsFormState {
+  return {
+    businessName: "",
+    invoicePrefix: "",
+    slotFrequencyDays: "7",
+    logoUrl: "",
+    language: "en-IN",
+    addressLine1: "",
+    addressLine2: "",
+    city: "",
+    state: "",
+    pincode: "",
+    country: "",
+    accountName: "",
+    bankName: "",
+    accountNumber: "",
+    ifscCode: "",
+    branch: "",
+    upiId: ""
+  };
+}
+
 export default function SettingsPage() {
   const { profile, business } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [status, setStatus] = useState("");
+  const [status, setStatus] = useState("Loading settings...");
   const [permissions, setPermissions] = useState<ModulePermissions>(EMPTY_PERMISSIONS);
+  const [form, setForm] = useState<SettingsFormState>(buildInitialForm());
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -137,10 +118,87 @@ export default function SettingsPage() {
     return hasRead((permissions.settings || "none") as PermissionLevel);
   }, [permissions.settings, profile?.role]);
 
-  const visibleActions = useMemo(
-    () => quickActions.filter((action) => hasRead((permissions[action.module] || "none") as PermissionLevel)),
-    [permissions]
-  );
+  const canEditSettings = useMemo(() => {
+    if (profile?.role === "owner") return true;
+    return hasEdit((permissions.settings || "none") as PermissionLevel);
+  }, [permissions.settings, profile?.role]);
+
+  useEffect(() => {
+    setForm({
+      businessName: business?.name || "",
+      invoicePrefix: business?.invoicePrefix || "",
+      slotFrequencyDays: String(business?.slotFrequencyDays || 7),
+      logoUrl: business?.logoUrl || "",
+      language: business?.language || "en-IN",
+      addressLine1: business?.address?.line1 || "",
+      addressLine2: business?.address?.line2 || "",
+      city: business?.address?.city || "",
+      state: business?.address?.state || "",
+      pincode: business?.address?.pincode || "",
+      country: business?.address?.country || "",
+      accountName: business?.bankDetails?.accountName || "",
+      bankName: business?.bankDetails?.bankName || "",
+      accountNumber: business?.bankDetails?.accountNumber || "",
+      ifscCode: business?.bankDetails?.ifscCode || "",
+      branch: business?.bankDetails?.branch || "",
+      upiId: business?.bankDetails?.upiId || ""
+    });
+    if (business) {
+      setStatus("");
+    }
+  }, [business]);
+
+  const onFieldChange = (key: keyof SettingsFormState, value: string) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleSave = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!profile?.businessId || !canEditSettings) return;
+
+    if (!form.businessName.trim()) {
+      setStatus("Business name is required.");
+      return;
+    }
+
+    if (!form.invoicePrefix.trim()) {
+      setStatus("Invoice prefix is required.");
+      return;
+    }
+
+    setSaving(true);
+    setStatus("");
+    try {
+      await updateBusinessSettings(profile.businessId, {
+        name: form.businessName.trim(),
+        invoicePrefix: form.invoicePrefix.trim().toUpperCase(),
+        slotFrequencyDays: Number(form.slotFrequencyDays || 0),
+        logoUrl: form.logoUrl.trim(),
+        language: form.language,
+        address: {
+          line1: form.addressLine1.trim(),
+          line2: form.addressLine2.trim(),
+          city: form.city.trim(),
+          state: form.state.trim(),
+          pincode: form.pincode.trim(),
+          country: form.country.trim()
+        },
+        bankDetails: {
+          accountName: form.accountName.trim(),
+          bankName: form.bankName.trim(),
+          accountNumber: form.accountNumber.trim(),
+          ifscCode: form.ifscCode.trim().toUpperCase(),
+          branch: form.branch.trim(),
+          upiId: form.upiId.trim()
+        }
+      });
+      setStatus("Settings updated successfully.");
+    } catch {
+      setStatus("Could not update settings right now.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   if (!loading && !canViewSettings) {
     return (
@@ -161,73 +219,139 @@ export default function SettingsPage() {
       <header className={styles.header}>
         <div>
           <p className={styles.eyebrow}>Settings</p>
-          <h1>Workspace Settings</h1>
-          <p className={styles.lead}>Use quick actions to manage permissions, slots, invoices, and reporting setup.</p>
+          <h1>Business Settings</h1>
+          <p className={styles.lead}>Update business details, bank details, address, logo, and language preferences.</p>
         </div>
       </header>
 
       {status ? <div className={styles.notice}>{status}</div> : null}
 
-      <section className={styles.stats}>
-        <article className={styles.statCard}>
-          <p>Business</p>
-          <h2>{business?.name || "-"}</h2>
-          <span>Profile</span>
-        </article>
-        <article className={styles.statCard}>
-          <p>Invoice Prefix</p>
-          <h2>{business?.invoicePrefix || "-"}</h2>
-          <span>Default prefix</span>
-        </article>
-        <article className={styles.statCard}>
-          <p>Slot Frequency</p>
-          <h2>{business?.slotFrequencyDays || 0} days</h2>
-          <span>Scheduling cycle</span>
-        </article>
-      </section>
-
-      <section className={styles.panel}>
-        <div className={styles.panelHeader}>
-          <h3>Quick Actions</h3>
-          {loading ? <span className={styles.muted}>Loading...</span> : null}
-        </div>
-
-        {!loading && visibleActions.length === 0 ? (
-          <p className={styles.empty}>No quick actions available for your permission set.</p>
-        ) : (
-          <div className={styles.actions}>
-            {visibleActions.map((action) => (
-              <Link
-                key={action.href}
-                href={action.href}
-                className={styles.actionCard}
-                style={{ "--action-accent": action.accent, "--action-bg": action.bg } as CSSProperties}
-              >
-                <span className={styles.actionDot} aria-hidden="true" />
-                <span className={styles.actionBody}>
-                  <span className={styles.actionTitle}>{action.title}</span>
-                  <span className={styles.actionDescription}>{action.description}</span>
-                </span>
-              </Link>
-            ))}
+      <form className={styles.form} onSubmit={handleSave}>
+        <section className={styles.panel}>
+          <div className={styles.panelHeader}>
+            <h3>Business Details</h3>
           </div>
-        )}
-      </section>
 
-      <section className={styles.panel}>
-        <div className={styles.panelHeader}>
-          <h3>My Module Permissions</h3>
-        </div>
+          <div className={styles.formGrid}>
+            <label className={styles.field}>
+              Business Name
+              <input value={form.businessName} onChange={(e) => onFieldChange("businessName", e.target.value)} disabled={!canEditSettings || loading} />
+            </label>
 
-        <div className={styles.permissionGrid}>
-          {MODULES.map((moduleId) => (
-            <div key={moduleId} className={styles.permissionItem}>
-              <span className={styles.permissionName}>{moduleId}</span>
-              <span className={styles.permissionValue}>{levelLabel((permissions[moduleId] || "none") as PermissionLevel)}</span>
+            <label className={styles.field}>
+              Invoice Prefix
+              <input value={form.invoicePrefix} onChange={(e) => onFieldChange("invoicePrefix", e.target.value)} disabled={!canEditSettings || loading} />
+            </label>
+
+            <label className={styles.field}>
+              Slot Frequency (Days)
+              <input
+                type="number"
+                min={1}
+                value={form.slotFrequencyDays}
+                onChange={(e) => onFieldChange("slotFrequencyDays", e.target.value)}
+                disabled={!canEditSettings || loading}
+              />
+            </label>
+
+            <label className={styles.field}>
+              Company Logo URL
+              <input value={form.logoUrl} onChange={(e) => onFieldChange("logoUrl", e.target.value)} placeholder="https://..." disabled={!canEditSettings || loading} />
+            </label>
+
+            <label className={styles.field}>
+              Language
+              <select value={form.language} onChange={(e) => onFieldChange("language", e.target.value)} disabled={!canEditSettings || loading}>
+                <option value="en-IN">English (India)</option>
+                <option value="hi-IN">Hindi</option>
+                <option value="kn-IN">Kannada</option>
+                <option value="te-IN">Telugu</option>
+                <option value="ta-IN">Tamil</option>
+              </select>
+            </label>
+          </div>
+
+          {form.logoUrl ? (
+            <div className={styles.logoPreviewWrap}>
+              <p>Logo Preview</p>
+              <img src={form.logoUrl} alt="Company logo" className={styles.logoPreview} />
             </div>
-          ))}
+          ) : null}
+        </section>
+
+        <section className={styles.panel}>
+          <div className={styles.panelHeader}>
+            <h3>Address</h3>
+          </div>
+
+          <div className={styles.formGrid}>
+            <label className={styles.field}>
+              Address Line 1
+              <input value={form.addressLine1} onChange={(e) => onFieldChange("addressLine1", e.target.value)} disabled={!canEditSettings || loading} />
+            </label>
+            <label className={styles.field}>
+              Address Line 2
+              <input value={form.addressLine2} onChange={(e) => onFieldChange("addressLine2", e.target.value)} disabled={!canEditSettings || loading} />
+            </label>
+            <label className={styles.field}>
+              City
+              <input value={form.city} onChange={(e) => onFieldChange("city", e.target.value)} disabled={!canEditSettings || loading} />
+            </label>
+            <label className={styles.field}>
+              State
+              <input value={form.state} onChange={(e) => onFieldChange("state", e.target.value)} disabled={!canEditSettings || loading} />
+            </label>
+            <label className={styles.field}>
+              Pincode
+              <input value={form.pincode} onChange={(e) => onFieldChange("pincode", e.target.value)} disabled={!canEditSettings || loading} />
+            </label>
+            <label className={styles.field}>
+              Country
+              <input value={form.country} onChange={(e) => onFieldChange("country", e.target.value)} disabled={!canEditSettings || loading} />
+            </label>
+          </div>
+        </section>
+
+        <section className={styles.panel}>
+          <div className={styles.panelHeader}>
+            <h3>Bank Details</h3>
+          </div>
+
+          <div className={styles.formGrid}>
+            <label className={styles.field}>
+              Account Name
+              <input value={form.accountName} onChange={(e) => onFieldChange("accountName", e.target.value)} disabled={!canEditSettings || loading} />
+            </label>
+            <label className={styles.field}>
+              Bank Name
+              <input value={form.bankName} onChange={(e) => onFieldChange("bankName", e.target.value)} disabled={!canEditSettings || loading} />
+            </label>
+            <label className={styles.field}>
+              Account Number
+              <input value={form.accountNumber} onChange={(e) => onFieldChange("accountNumber", e.target.value)} disabled={!canEditSettings || loading} />
+            </label>
+            <label className={styles.field}>
+              IFSC Code
+              <input value={form.ifscCode} onChange={(e) => onFieldChange("ifscCode", e.target.value)} disabled={!canEditSettings || loading} />
+            </label>
+            <label className={styles.field}>
+              Branch
+              <input value={form.branch} onChange={(e) => onFieldChange("branch", e.target.value)} disabled={!canEditSettings || loading} />
+            </label>
+            <label className={styles.field}>
+              UPI ID
+              <input value={form.upiId} onChange={(e) => onFieldChange("upiId", e.target.value)} disabled={!canEditSettings || loading} />
+            </label>
+          </div>
+        </section>
+
+        <div className={styles.formActions}>
+          {!canEditSettings ? <p className={styles.readOnly}>Read-only access. Ask an admin for edit permission.</p> : null}
+          <button type="submit" className={styles.saveBtn} disabled={!canEditSettings || loading || saving}>
+            {saving ? "Saving..." : "Save Settings"}
+          </button>
         </div>
-      </section>
+      </form>
     </div>
   );
 }

@@ -34,36 +34,9 @@
   margin-bottom: 16px;
 }
 
-.stats {
+.form {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 14px;
-  margin-bottom: 22px;
-}
-
-.statCard {
-  background: #fff;
-  border-radius: 16px;
-  padding: 16px;
-  border: 1px solid rgba(31, 42, 29, 0.1);
-  display: grid;
-  gap: 6px;
-}
-
-.statCard p {
-  color: var(--page-muted);
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.statCard h2 {
-  font-size: 1.3rem;
-}
-
-.statCard span {
-  font-size: 12px;
-  color: var(--page-muted);
+  gap: 16px;
 }
 
 .panel {
@@ -73,7 +46,6 @@
   border: 1px solid rgba(31, 42, 29, 0.1);
   display: grid;
   gap: 12px;
-  margin-bottom: 16px;
 }
 
 .panelHeader {
@@ -82,113 +54,86 @@
   align-items: center;
 }
 
-.muted {
-  color: var(--page-muted);
-  font-size: 13px;
-}
-
-.empty {
-  color: var(--page-muted);
-  font-size: 14px;
-}
-
-.actions {
+.formGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  gap: 12px;
 }
 
-.actionCard {
-  padding: 12px;
-  border-radius: 14px;
-  border: 1px solid rgba(31, 42, 29, 0.16);
-  background: #fff;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 88px;
-  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-.actionCard:hover {
-  transform: translateY(-1px);
-  border-color: rgba(31, 42, 29, 0.24);
-  box-shadow: 0 8px 20px rgba(37, 57, 21, 0.08);
-}
-
-.actionDot {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
+.field {
   display: grid;
-  place-items: center;
-  background: var(--action-bg, #edf5e1);
-  color: var(--action-accent, #2f4d1c);
-  flex: 0 0 38px;
-}
-
-.actionDot::before {
-  content: "";
-  width: 14px;
-  height: 14px;
-  border-radius: 999px;
-  background: currentColor;
-}
-
-.actionBody {
-  min-width: 0;
-  display: grid;
-  gap: 4px;
-}
-
-.actionTitle {
-  font-size: 13px;
+  gap: 6px;
+  font-size: 12px;
   text-transform: uppercase;
-  letter-spacing: 0.6px;
-  color: var(--page-ink);
+  letter-spacing: 0.4px;
+  color: var(--page-muted);
 }
 
-.actionDescription {
+.field input,
+.field select {
+  border: 1px solid rgba(31, 42, 29, 0.16);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--page-ink);
+  min-height: 42px;
+  padding: 10px 12px;
+}
+
+.field input:disabled,
+.field select:disabled {
+  background: #f4f6f1;
+  color: #7c8777;
+}
+
+.logoPreviewWrap {
+  display: grid;
+  gap: 8px;
   color: var(--page-muted);
   font-size: 12px;
-  line-height: 1.3;
 }
 
-.permissionGrid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
+.logoPreview {
+  width: min(240px, 100%);
+  max-height: 120px;
+  object-fit: contain;
+  border: 1px solid rgba(31, 42, 29, 0.12);
+  border-radius: 10px;
+  background: #fff;
+  padding: 6px;
 }
 
-.permissionItem {
-  border: 1px solid rgba(31, 42, 29, 0.1);
-  border-radius: 12px;
-  background: #f8fbf3;
-  padding: 10px 12px;
-  display: grid;
-  gap: 4px;
+.formActions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
 }
 
-.permissionName {
+.readOnly {
+  color: #7a5941;
+  font-size: 13px;
+}
+
+.saveBtn {
+  padding: 11px 18px;
+  border-radius: 999px;
+  border: 1px solid var(--accent-dark);
+  background: var(--accent);
+  color: #fff;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--page-muted);
-  font-size: 11px;
+  font-size: 12px;
+  cursor: pointer;
 }
 
-.permissionValue {
-  color: var(--page-ink);
-  font-size: 13px;
-  font-weight: 600;
+.saveBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 @media (max-width: 980px) {
-  .actions {
+  .formGrid {
     grid-template-columns: 1fr;
-  }
-
-  .permissionGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -197,11 +142,12 @@
     flex-direction: column;
   }
 
-  .stats {
-    grid-template-columns: 1fr;
+  .formActions {
+    flex-direction: column;
+    align-items: stretch;
   }
 
-  .permissionGrid {
-    grid-template-columns: 1fr;
+  .saveBtn {
+    width: 100%;
   }
 }

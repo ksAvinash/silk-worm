@@ -1,5 +1,5 @@
 import { User } from "firebase/auth";
-import { collection, doc, getDoc, getDocs, limit, query, serverTimestamp, setDoc, where } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, limit, query, serverTimestamp, setDoc, updateDoc, where } from "firebase/firestore";
 import { db } from "./config";
 
 export type UserRole = "owner" | "manager" | "operator";
@@ -10,6 +10,48 @@ export interface BusinessProfile {
   ownerUid: string;
   slotFrequencyDays: number;
   invoicePrefix: string;
+  logoUrl?: string;
+  language?: string;
+  address?: {
+    line1?: string;
+    line2?: string;
+    city?: string;
+    state?: string;
+    pincode?: string;
+    country?: string;
+  };
+  bankDetails?: {
+    accountName?: string;
+    bankName?: string;
+    accountNumber?: string;
+    ifscCode?: string;
+    branch?: string;
+    upiId?: string;
+  };
+}
+
+export interface BusinessSettingsUpdate {
+  name: string;
+  invoicePrefix: string;
+  slotFrequencyDays: number;
+  logoUrl?: string;
+  language?: string;
+  address?: {
+    line1?: string;
+    line2?: string;
+    city?: string;
+    state?: string;
+    pincode?: string;
+    country?: string;
+  };
+  bankDetails?: {
+    accountName?: string;
+    bankName?: string;
+    accountNumber?: string;
+    ifscCode?: string;
+    branch?: string;
+    upiId?: string;
+  };
 }
 
 export interface UserProfile {
@@ -152,4 +194,33 @@ export async function getCurrentUserByPhone(phone: string): Promise<UserProfile 
   const row = results.docs[0];
   const data = row.data() as Omit<UserProfile, "uid">;
   return { uid: row.id, ...data };
+}
+
+export async function updateBusinessSettings(businessId: string, payload: BusinessSettingsUpdate): Promise<void> {
+  const businessRef = doc(db, "businesses", businessId);
+
+  await updateDoc(businessRef, {
+    name: payload.name,
+    invoicePrefix: payload.invoicePrefix,
+    slotFrequencyDays: Number(payload.slotFrequencyDays || 0),
+    logoUrl: payload.logoUrl || "",
+    language: payload.language || "en-IN",
+    address: {
+      line1: payload.address?.line1 || "",
+      line2: payload.address?.line2 || "",
+      city: payload.address?.city || "",
+      state: payload.address?.state || "",
+      pincode: payload.address?.pincode || "",
+      country: payload.address?.country || ""
+    },
+    bankDetails: {
+      accountName: payload.bankDetails?.accountName || "",
+      bankName: payload.bankDetails?.bankName || "",
+      accountNumber: payload.bankDetails?.accountNumber || "",
+      ifscCode: payload.bankDetails?.ifscCode || "",
+      branch: payload.bankDetails?.branch || "",
+      upiId: payload.bankDetails?.upiId || ""
+    },
+    updatedAt: serverTimestamp()
+  });
 }
