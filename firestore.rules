@@ -86,7 +86,25 @@ service cloud.firestore {
 
       match /users/{docId} {
         allow read: if isMyBusiness(businessId);
-        allow create, update, delete: if isMyBusiness(businessId) && isOwnerOrManager();
+        // Owners/managers manage team users.
+        // A user can also create/update their own business user doc for bootstrap at login.
+        allow create: if isMyBusiness(businessId) && (
+          isOwnerOrManager() ||
+          (
+            isSignedIn() &&
+            request.auth.uid == docId &&
+            request.resource.data.role == myProfile().role
+          )
+        );
+        allow update: if isMyBusiness(businessId) && (
+          isOwnerOrManager() ||
+          (
+            isSignedIn() &&
+            request.auth.uid == docId &&
+            request.resource.data.role == resource.data.role
+          )
+        );
+        allow delete: if isMyBusiness(businessId) && isOwnerOrManager();
       }
     }
   }
