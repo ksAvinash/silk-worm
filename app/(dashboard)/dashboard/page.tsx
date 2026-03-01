@@ -77,7 +77,7 @@ function formatCurrency(value: number) {
 }
 
 export default function DashboardPage() {
-  const { business, profile } = useAuth();
+  const { profile } = useAuth();
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [status, setStatus] = useState("loading");
 

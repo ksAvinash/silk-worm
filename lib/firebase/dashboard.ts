@@ -92,8 +92,12 @@ export async function getDashboardMetrics(businessId: string): Promise<Dashboard
   const pendingDue = invoiceSnapshot.docs.reduce((sum, row) => sum + asNumber(row.data().dueAmount), 0);
   const collectedAmount = paymentSnapshot.docs.reduce((sum, row) => sum + asNumber(row.data().amount), 0);
 
-  const farmers = farmerSnapshot.docs.map((row) => ({ id: row.id, ...row.data() }));
-  const farmerNameById = new Map(farmers.map((row) => [row.id, String(row.name || "Farmer")]));
+  const farmerNameById = new Map(
+    farmerSnapshot.docs.map((row) => {
+      const data = row.data() as { name?: string };
+      return [row.id, String(data.name || "Farmer")] as const;
+    })
+  );
   const slotNameById = new Map(slots.map((row) => [row.id, row.slotName]));
 
   const recentBookings = bookingSnapshot.docs
