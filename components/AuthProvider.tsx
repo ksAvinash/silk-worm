@@ -38,8 +38,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const nextProfile = await ensureUserProfile(nextUser);
         setProfile(nextProfile);
 
+        const claimsBefore = await nextUser.getIdTokenResult();
+        console.log("[auth] login claims (before sync)", {
+          uid: nextUser.uid,
+          businessId: String(claimsBefore.claims.businessId || ""),
+          role: String(claimsBefore.claims.role || "")
+        });
+
         try {
           await syncBusinessRoleClaims(nextUser, nextProfile);
+
+          const claimsAfter = await nextUser.getIdTokenResult(true);
+          console.log("[auth] login claims (after sync)", {
+            uid: nextUser.uid,
+            businessId: String(claimsAfter.claims.businessId || ""),
+            role: String(claimsAfter.claims.role || "")
+          });
         } catch (claimError) {
           console.warn("Failed to sync auth claims", claimError);
         }
