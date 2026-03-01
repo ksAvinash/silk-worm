@@ -1,0 +1,84 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function hasUserProfile() {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function myBusinessId() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.businessId;
+    }
+
+    function isOwnerOrManager() {
+      return hasUserProfile() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ["owner", "manager"];
+    }
+
+    match /users/{userId} {
+      allow read: if isSignedIn() && request.auth.uid == userId;
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      allow update, delete: if false;
+    }
+
+    match /businesses/{businessId} {
+      allow read: if hasUserProfile() && businessId == myBusinessId();
+      allow create: if isSignedIn() &&
+        request.resource.data.ownerUid == request.auth.uid;
+      allow update: if hasUserProfile() && businessId == myBusinessId() && isOwnerOrManager();
+      allow delete: if false;
+    }
+
+    match /slots/{docId} {
+      allow read: if hasUserProfile() && resource.data.businessId == myBusinessId();
+      allow create: if hasUserProfile() && request.resource.data.businessId == myBusinessId();
+      allow update: if hasUserProfile() && resource.data.businessId == myBusinessId() && request.resource.data.businessId == myBusinessId();
+      allow delete: if hasUserProfile() && resource.data.businessId == myBusinessId() && isOwnerOrManager();
+    }
+
+    match /farmers/{docId} {
+      allow read: if hasUserProfile() && resource.data.businessId == myBusinessId();
+      allow create, update: if hasUserProfile() &&
+        request.resource.data.businessId == myBusinessId();
+      allow delete: if hasUserProfile() && resource.data.businessId == myBusinessId() && isOwnerOrManager();
+    }
+
+    match /bookings/{docId} {
+      allow read: if hasUserProfile() && resource.data.businessId == myBusinessId();
+      allow create, update: if hasUserProfile() &&
+        request.resource.data.businessId == myBusinessId();
+      allow delete: if hasUserProfile() && resource.data.businessId == myBusinessId() && isOwnerOrManager();
+    }
+
+    match /inventoryLedger/{docId} {
+      allow read: if hasUserProfile() && resource.data.businessId == myBusinessId();
+      allow create, update: if hasUserProfile() &&
+        request.resource.data.businessId == myBusinessId();
+      allow delete: if false;
+    }
+
+    match /invoices/{docId} {
+      allow read: if hasUserProfile() && resource.data.businessId == myBusinessId();
+      allow create, update: if hasUserProfile() &&
+        request.resource.data.businessId == myBusinessId() &&
+        isOwnerOrManager();
+      allow delete: if hasUserProfile() &&
+        resource.data.businessId == myBusinessId() &&
+        isOwnerOrManager();
+    }
+
+    match /payments/{docId} {
+      allow read: if hasUserProfile() && resource.data.businessId == myBusinessId();
+      allow create, update: if hasUserProfile() &&
+        request.resource.data.businessId == myBusinessId() &&
+        isOwnerOrManager();
+      allow delete: if hasUserProfile() &&
+        resource.data.businessId == myBusinessId() &&
+        isOwnerOrManager();
+    }
+  }
+}
