@@ -5,7 +5,7 @@ import CustomDatePicker from "@/components/ui/CustomDatePicker";
 import CustomDropdown, { type DropdownOption } from "@/components/ui/CustomDropdown";
 import SearchInput from "@/components/ui/SearchInput";
 import { useAuth } from "@/components/AuthProvider";
-import { createSlot, listSlotsByBusiness, type SlotRecord, updateSlotBasics } from "@/lib/firebase/slots";
+import { createSlot, deleteSlot, listSlotsByBusiness, type SlotRecord, updateSlotBasics } from "@/lib/firebase/slots";
 import styles from "./slots.module.css";
 
 const statusOptions: DropdownOption[] = [
@@ -39,6 +39,7 @@ export default function SlotsPage() {
   const [editingSlot, setEditingSlot] = useState<SlotRecord | null>(null);
   const [editName, setEditName] = useState("");
   const [editCapacity, setEditCapacity] = useState("");
+  const [deletingSlot, setDeletingSlot] = useState<SlotRecord | null>(null);
 
   const refreshSlots = useCallback(async () => {
     if (!profile?.businessId) return;
@@ -136,6 +137,24 @@ export default function SlotsPage() {
     }
   };
 
+  const handleDeleteSlot = async () => {
+    if (!deletingSlot) return;
+    if (deletingSlot.bookedQty > 0) {
+      setStatus("Cannot delete slot with bookings.");
+      setDeletingSlot(null);
+      return;
+    }
+
+    try {
+      await deleteSlot(deletingSlot.id);
+      setStatus("Slot deleted.");
+      setDeletingSlot(null);
+      await refreshSlots();
+    } catch {
+      setStatus("Could not delete slot. Please try again.");
+    }
+  };
+
   const filteredSlots = useMemo(() => {
     const query = searchText.trim().toLowerCase();
     if (!query) return slots;
@@ -200,7 +219,7 @@ export default function SlotsPage() {
                   <th>Booked</th>
                   <th>Balance</th>
                   <th>Status</th>
-                  <th>Edit</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -217,16 +236,29 @@ export default function SlotsPage() {
                     <td data-label="Status">
                       <span className={`${styles.statusPill} ${statusClass(slot.status)}`}>{slot.status}</span>
                     </td>
-                    <td data-label="Edit">
-                      <button
-                        type="button"
-                        className={styles.editBtn}
-                        onClick={() => openEditModal(slot)}
-                        aria-label={`Edit ${slot.slotName}`}
-                        title="Edit"
-                      >
-                        ✎
-                      </button>
+                    <td data-label="Actions" className={styles.rowActions}>
+                      <div className={styles.inlineActions}>
+                        <button
+                          type="button"
+                          className={styles.editBtn}
+                          onClick={() => openEditModal(slot)}
+                          aria-label={`Edit ${slot.slotName}`}
+                          title="Edit"
+                        >
+                          <span className={styles.editIcon}>✎</span>
+                        </button>
+                        {slot.bookedQty === 0 ? (
+                          <button
+                            type="button"
+                            className={`${styles.actionBtn} ${styles.deleteBtn}`}
+                            onClick={() => setDeletingSlot(slot)}
+                            aria-label={`Delete ${slot.slotName}`}
+                            title="Delete"
+                          >
+                            <span className={styles.actionIcon}>✕</span>
+                          </button>
+                        ) : null}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -345,6 +377,30 @@ export default function SlotsPage() {
                 <button type="submit">Update Slot</button>
               </div>
             </form>
+          </div>
+        </div>
+      ) : null}
+
+      {deletingSlot ? (
+        <div className={styles.modalOverlay} onClick={() => setDeletingSlot(null)}>
+          <div className={styles.modal} onClick={(event) => event.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h2>Delete Slot</h2>
+              <button type="button" className={styles.closeBtn} onClick={() => setDeletingSlot(null)}>
+                ✕
+              </button>
+            </div>
+            <p className={styles.hint}>
+              Delete <strong>{deletingSlot.slotName}</strong>? This action cannot be undone.
+            </p>
+            <div className={styles.actions}>
+              <button type="button" className={styles.secondaryBtn} onClick={() => setDeletingSlot(null)}>
+                Cancel
+              </button>
+              <button type="button" className={styles.deletePrimaryBtn} onClick={() => void handleDeleteSlot()}>
+                Delete Slot
+              </button>
+            </div>
           </div>
         </div>
       ) : null}

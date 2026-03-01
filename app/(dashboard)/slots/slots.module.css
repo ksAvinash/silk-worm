@@ -114,22 +114,82 @@
   vertical-align: top;
 }
 
+.rowActions {
+  min-width: 110px;
+}
+
+.inlineActions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
 .editBtn {
   width: 32px;
   height: 32px;
-  border: 1px solid rgba(31, 42, 29, 0.14);
+  border: 1px solid rgba(30, 25, 22, 0.12);
   background: #fff;
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
-  color: var(--accent-dark);
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 14px;
-  line-height: 1;
+  transition: all 0.3s ease;
+  color: #4a6f23;
+  font-family: inherit;
 }
 
 .editBtn:hover {
-  background: #eef5e3;
+  background: #4a6f23;
+  color: #fff;
+  border-color: #4a6f23;
+}
+
+.actionBtn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(30, 25, 22, 0.12);
+  background: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #4f5d45;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.actionBtn:hover {
+  border-color: rgba(30, 25, 22, 0.2);
+}
+
+.actionIcon {
+  display: inline-block;
+  line-height: 1;
+}
+
+.editIcon {
+  display: inline-block;
+  transform: rotate(90deg);
+  line-height: 1;
+}
+
+.deleteBtn:hover {
+  background: #c74624;
+  color: #fff;
+  border-color: #c74624;
+}
+
+.deleteBtn {
+  color: #c74624;
+}
+
+.deletePrimaryBtn {
+  background: #c74624;
+  border-color: #a5381c;
 }
 
 .name {
@@ -306,5 +366,14 @@
     text-transform: uppercase;
     letter-spacing: 0.4px;
     color: var(--page-muted);
+  }
+
+  .table td.rowActions::before {
+    content: none;
+  }
+
+  .rowActions {
+    min-width: 0;
+    justify-content: flex-start;
   }
 }

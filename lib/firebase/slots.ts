@@ -2,6 +2,7 @@ import {
   Timestamp,
   addDoc,
   collection,
+  deleteDoc,
   doc,
   getDocs,
   orderBy,
@@ -110,4 +111,8 @@ export async function updateSlotBasics(input: UpdateSlotBasicsInput): Promise<vo
     wormCapacity: input.eggCapacity,
     availableQty
   });
+}
+
+export async function deleteSlot(slotId: string): Promise<void> {
+  await deleteDoc(doc(db, "slots", slotId));
 }
