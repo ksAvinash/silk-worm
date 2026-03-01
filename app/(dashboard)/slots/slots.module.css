@@ -114,6 +114,24 @@
   vertical-align: top;
 }
 
+.editBtn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(31, 42, 29, 0.14);
+  background: #fff;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--accent-dark);
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.editBtn:hover {
+  background: #eef5e3;
+}
+
 .name {
   font-weight: 600;
   color: var(--page-ink);
@@ -215,6 +233,11 @@
   background: #fff;
   color: var(--page-ink);
   font-family: inherit;
+}
+
+.hint {
+  color: var(--page-muted);
+  font-size: 12px;
 }
 
 .actions {

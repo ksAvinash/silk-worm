@@ -5,7 +5,7 @@ import CustomDatePicker from "@/components/ui/CustomDatePicker";
 import CustomDropdown, { type DropdownOption } from "@/components/ui/CustomDropdown";
 import SearchInput from "@/components/ui/SearchInput";
 import { useAuth } from "@/components/AuthProvider";
-import { createSlot, listSlotsByBusiness, type SlotRecord } from "@/lib/firebase/slots";
+import { createSlot, listSlotsByBusiness, type SlotRecord, updateSlotBasics } from "@/lib/firebase/slots";
 import styles from "./slots.module.css";
 
 const statusOptions: DropdownOption[] = [
@@ -36,6 +36,9 @@ export default function SlotsPage() {
   const [slotStatus, setSlotStatus] = useState<SlotRecord["status"]>("planned");
   const [searchText, setSearchText] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const [editingSlot, setEditingSlot] = useState<SlotRecord | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editCapacity, setEditCapacity] = useState("");
 
   const refreshSlots = useCallback(async () => {
     if (!profile?.businessId) return;
@@ -95,6 +98,41 @@ export default function SlotsPage() {
       await refreshSlots();
     } catch {
       setStatus("Could not save slot. Please try again.");
+    }
+  };
+
+  const openEditModal = (slot: SlotRecord) => {
+    setEditingSlot(slot);
+    setEditName(slot.slotName);
+    setEditCapacity(String(slot.eggCapacity));
+  };
+
+  const handleUpdateSlot = async () => {
+    if (!editingSlot) return;
+
+    const capacity = Number(editCapacity);
+    if (!editName.trim() || !capacity || capacity <= 0) {
+      setStatus("Enter valid slot name and total.");
+      return;
+    }
+
+    if (capacity < editingSlot.bookedQty) {
+      setStatus(`Total cannot be less than booked quantity (${editingSlot.bookedQty}).`);
+      return;
+    }
+
+    try {
+      await updateSlotBasics({
+        slotId: editingSlot.id,
+        slotName: editName.trim(),
+        eggCapacity: capacity,
+        bookedQty: editingSlot.bookedQty
+      });
+      setStatus("Slot updated.");
+      setEditingSlot(null);
+      await refreshSlots();
+    } catch {
+      setStatus("Could not update slot. Please try again.");
     }
   };
 
@@ -162,6 +200,7 @@ export default function SlotsPage() {
                   <th>Booked</th>
                   <th>Balance</th>
                   <th>Status</th>
+                  <th>Edit</th>
                 </tr>
               </thead>
               <tbody>
@@ -177,6 +216,17 @@ export default function SlotsPage() {
                     <td data-label="Balance">{slot.availableQty}</td>
                     <td data-label="Status">
                       <span className={`${styles.statusPill} ${statusClass(slot.status)}`}>{slot.status}</span>
+                    </td>
+                    <td data-label="Edit">
+                      <button
+                        type="button"
+                        className={styles.editBtn}
+                        onClick={() => openEditModal(slot)}
+                        aria-label={`Edit ${slot.slotName}`}
+                        title="Edit"
+                      >
+                        ✎
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -246,6 +296,53 @@ export default function SlotsPage() {
                   Cancel
                 </button>
                 <button type="submit">Create Slot</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
+
+      {editingSlot ? (
+        <div className={styles.modalOverlay} onClick={() => setEditingSlot(null)}>
+          <div className={styles.modal} onClick={(event) => event.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h2>Edit Slot</h2>
+              <button type="button" className={styles.closeBtn} onClick={() => setEditingSlot(null)}>
+                ✕
+              </button>
+            </div>
+
+            <form
+              className={styles.form}
+              onSubmit={(event) => {
+                event.preventDefault();
+                void handleUpdateSlot();
+              }}
+            >
+              <label className={styles.field}>
+                Slot Name
+                <input value={editName} onChange={(e) => setEditName(e.target.value)} required />
+              </label>
+
+              <label className={styles.field}>
+                Total
+                <input
+                  type="number"
+                  value={editCapacity}
+                  onChange={(e) => setEditCapacity(e.target.value)}
+                  min={editingSlot.bookedQty}
+                  step={1}
+                  required
+                />
+              </label>
+
+              <p className={styles.hint}>Booked quantity: {editingSlot.bookedQty}. Total must be equal or greater.</p>
+
+              <div className={styles.actions}>
+                <button type="button" className={styles.secondaryBtn} onClick={() => setEditingSlot(null)}>
+                  Cancel
+                </button>
+                <button type="submit">Update Slot</button>
               </div>
             </form>
           </div>

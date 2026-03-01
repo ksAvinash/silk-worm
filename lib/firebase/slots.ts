@@ -2,10 +2,12 @@ import {
   Timestamp,
   addDoc,
   collection,
+  doc,
   getDocs,
   orderBy,
   query,
   serverTimestamp,
+  updateDoc,
   where
 } from "firebase/firestore";
 import { db } from "./config";
@@ -84,5 +86,28 @@ export async function createSlot(input: CreateSlotInput): Promise<void> {
     availableQty: input.eggCapacity,
     status,
     createdAt: serverTimestamp()
+  });
+}
+
+interface UpdateSlotBasicsInput {
+  slotId: string;
+  slotName: string;
+  eggCapacity: number;
+  bookedQty: number;
+}
+
+export async function updateSlotBasics(input: UpdateSlotBasicsInput): Promise<void> {
+  if (input.eggCapacity < input.bookedQty) {
+    throw new Error("Capacity cannot be less than booked quantity.");
+  }
+
+  const slotRef = doc(db, "slots", input.slotId);
+  const availableQty = input.eggCapacity - input.bookedQty;
+
+  await updateDoc(slotRef, {
+    slotName: input.slotName,
+    eggCapacity: input.eggCapacity,
+    wormCapacity: input.eggCapacity,
+    availableQty
   });
 }
