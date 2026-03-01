@@ -34,6 +34,32 @@ function defaultInvoicePrefix() {
   return `SW${year}`;
 }
 
+async function ensureBusinessUserDoc(profile: UserProfile) {
+  if (!profile.businessId) return;
+
+  const teamUserRef = doc(db, "businesses", profile.businessId, "users", profile.uid);
+  const teamSnap = await getDoc(teamUserRef);
+  if (teamSnap.exists()) return;
+
+  await setDoc(teamUserRef, {
+    role: profile.role || "owner",
+    phone: profile.phone || "",
+    displayName: profile.displayName || "Owner",
+    active: true,
+    notes: "",
+    permissions: {
+      slots: "edit",
+      farmers: "edit",
+      bookings: "edit",
+      invoices: "edit",
+      reports: "edit",
+      users: "edit"
+    },
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  });
+}
+
 async function createBusinessForOwner(user: User): Promise<UserProfile> {
   const businessRef = doc(collection(db, "businesses"));
   const userRef = doc(db, "users", user.uid);
@@ -90,28 +116,12 @@ export async function ensureUserProfile(user: User): Promise<UserProfile> {
 
   if (snap.exists()) {
     const data = snap.data() as Omit<UserProfile, "uid">;
-    const teamUserRef = doc(db, "businesses", data.businessId, "users", user.uid);
-    const teamSnap = await getDoc(teamUserRef);
-    if (!teamSnap.exists()) {
-      await setDoc(teamUserRef, {
-        role: data.role || "owner",
-        phone: data.phone || "",
-        displayName: data.displayName || "Owner",
-        active: true,
-        notes: "",
-        permissions: {
-          slots: "edit",
-          farmers: "edit",
-          bookings: "edit",
-          invoices: "edit",
-          reports: "edit",
-          users: "edit"
-        },
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
-      });
-    }
-    return { uid: user.uid, ...data };
+    const profile = { uid: user.uid, ...data };
+    void ensureBusinessUserDoc(profile).catch((error) => {
+      // Do not block login redirect if backfill fails.
+      console.warn("Could not backfill business user profile", error);
+    });
+    return profile;
   }
 
   return createBusinessForOwner(user);
