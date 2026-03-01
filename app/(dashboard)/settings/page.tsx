@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
+import CustomDropdown, { type DropdownOption } from "@/components/ui/CustomDropdown";
 import { getTeamUserById, type ModulePermissions, type PermissionLevel } from "@/lib/firebase/users";
 import { updateBusinessSettings } from "@/lib/firebase/tenant";
 import styles from "./settings.module.css";
@@ -15,6 +16,14 @@ const EMPTY_PERMISSIONS: ModulePermissions = {
   users: "none",
   settings: "none"
 };
+
+const LANGUAGE_OPTIONS: DropdownOption[] = [
+  { value: "en-IN", label: "English" },
+  { value: "hi-IN", label: "Hindi" },
+  { value: "kn-IN", label: "Kannada" },
+  { value: "te-IN", label: "Telugu" },
+  { value: "ta-IN", label: "Tamil" }
+];
 
 interface SettingsFormState {
   businessName: string;
@@ -261,13 +270,14 @@ export default function SettingsPage() {
 
             <label className={styles.field}>
               Language
-              <select value={form.language} onChange={(e) => onFieldChange("language", e.target.value)} disabled={!canEditSettings || loading}>
-                <option value="en-IN">English (India)</option>
-                <option value="hi-IN">Hindi</option>
-                <option value="kn-IN">Kannada</option>
-                <option value="te-IN">Telugu</option>
-                <option value="ta-IN">Tamil</option>
-              </select>
+              <CustomDropdown
+                options={LANGUAGE_OPTIONS}
+                value={form.language}
+                onChange={(next) => onFieldChange("language", next)}
+                placeholder="Select language"
+                searchable={false}
+                disabled={!canEditSettings || loading}
+              />
             </label>
           </div>
 

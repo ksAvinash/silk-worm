@@ -15,6 +15,7 @@ interface CustomDropdownProps {
   placeholder?: string;
   searchable?: boolean;
   searchPlaceholder?: string;
+  disabled?: boolean;
 }
 
 function normalizeText(text: string) {
@@ -27,7 +28,8 @@ export default function CustomDropdown({
   onChange,
   placeholder = "Select option",
   searchable = false,
-  searchPlaceholder = "Search"
+  searchPlaceholder = "Search",
+  disabled = false
 }: CustomDropdownProps) {
   const [open, setOpen] = useState(false);
   const [searchText, setSearchText] = useState("");
@@ -63,6 +65,7 @@ export default function CustomDropdown({
   }, [options, searchText]);
 
   const handleSelect = (next: string) => {
+    if (disabled) return;
     onChange(next);
     setOpen(false);
     setSearchText("");
@@ -70,7 +73,16 @@ export default function CustomDropdown({
 
   return (
     <div className={styles.controlWrap} ref={ref}>
-      <button type="button" className={styles.trigger} onClick={() => setOpen((prev) => !prev)}>
+      <button
+        type="button"
+        className={`${styles.trigger} ${disabled ? styles.triggerDisabled : ""}`}
+        onClick={() => {
+          if (disabled) return;
+          setOpen((prev) => !prev);
+        }}
+        disabled={disabled}
+        aria-disabled={disabled}
+      >
         <span>{selectedLabel}</span>
         <span className={styles.chevron}>{open ? "▲" : "▼"}</span>
       </button>
