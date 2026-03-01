@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 
 const mobileLinks = [
   ["/dashboard", "Home"],
@@ -13,15 +13,14 @@ const mobileLinks = [
 
 export default function DashboardShell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
-  const router = useRouter();
   const isActive = (href: string) => (href === "/dashboard" ? path === href : path.startsWith(href));
 
   return (
     <div className="workspace-page">
       {path !== "/dashboard" ? (
-        <button type="button" className="workspace-back-link" onClick={() => router.back()}>
+        <Link href="/dashboard" className="workspace-back-link">
           ← Back
-        </button>
+        </Link>
       ) : null}
 
       <section className="main workspace-main">{children}</section>
