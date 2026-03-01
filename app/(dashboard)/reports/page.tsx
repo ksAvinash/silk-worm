@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
+import CustomMonthPicker from "@/components/ui/CustomMonthPicker";
 import { getReportsPayload, type ReportsPayload } from "@/lib/firebase/reports";
 import styles from "./reports.module.css";
 
@@ -29,7 +30,7 @@ export default function ReportsPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!profile?.businessId) return;
+    if (!profile?.businessId || !month) return;
 
     const load = async () => {
       setStatus("loading");
@@ -63,7 +64,7 @@ export default function ReportsPage() {
 
         <label className={styles.monthField}>
           Month
-          <input className={styles.monthInput} type="month" value={month} onChange={(event) => setMonth(event.target.value)} />
+          <CustomMonthPicker value={month} onChange={setMonth} placeholder="Select report month" />
         </label>
       </header>
 

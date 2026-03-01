@@ -113,6 +113,11 @@ export default function InvoicesPage() {
     });
   }, [bookings, farmerId, invoices]);
 
+  useEffect(() => {
+    if (!showForm) return;
+    setSelectedBookingIds(availableBookings.map((booking) => booking.id));
+  }, [availableBookings, showForm]);
+
   const selectedBookingsTotal = useMemo(() => {
     return availableBookings
       .filter((booking) => selectedBookingIds.includes(booking.id))
