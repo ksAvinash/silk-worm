@@ -222,14 +222,45 @@
   gap: 10px;
 }
 
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 .modalTitle {
   font-family: var(--font-fraunces), "Times New Roman", serif;
   font-size: 1.3rem;
 }
 
+.closeBtn {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid rgba(31, 42, 29, 0.14);
+  background: #fff;
+  color: #1e1916;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
 .modalText {
   color: var(--page-muted);
   line-height: 1.5;
+}
+
+.formGrid {
+  display: grid;
+  gap: 12px;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--page-ink);
 }
 
 .modalActions {

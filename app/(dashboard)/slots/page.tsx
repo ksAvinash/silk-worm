@@ -1,10 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import ConfirmModal from "@/components/ui/ConfirmModal";
 import CustomDatePicker from "@/components/ui/CustomDatePicker";
 import CustomDropdown, { type DropdownOption } from "@/components/ui/CustomDropdown";
 import SearchInput from "@/components/ui/SearchInput";
+import uiStyles from "@/components/ui/controls.module.css";
 import { useAuth } from "@/components/AuthProvider";
 import { createSlot, listSlotsByBusiness, type SlotRecord } from "@/lib/firebase/slots";
 
@@ -28,7 +28,7 @@ export default function SlotsPage() {
   const [eggCapacity, setEggCapacity] = useState("5000");
   const [slotStatus, setSlotStatus] = useState<SlotRecord["status"]>("planned");
   const [searchText, setSearchText] = useState("");
-  const [showConfirm, setShowConfirm] = useState(false);
+  const [showForm, setShowForm] = useState(false);
 
   const refreshSlots = useCallback(async () => {
     if (!profile?.businessId) {
@@ -52,6 +52,14 @@ export default function SlotsPage() {
     void refreshSlots();
   }, [refreshSlots]);
 
+  const resetForm = () => {
+    setSlotName("");
+    setStartDate("");
+    setHatchDate("");
+    setEggCapacity("5000");
+    setSlotStatus("planned");
+  };
+
   const validateForm = () => {
     const capacity = Number(eggCapacity);
     if (!slotName || !startDate || !hatchDate || !capacity || capacity <= 0) {
@@ -62,13 +70,13 @@ export default function SlotsPage() {
     return true;
   };
 
-  const submitSlot = async () => {
+  const submitSlot = async (): Promise<boolean> => {
     if (!profile?.businessId) {
-      return;
+      return false;
     }
 
     if (!validateForm()) {
-      return;
+      return false;
     }
 
     const capacity = Number(eggCapacity);
@@ -83,15 +91,12 @@ export default function SlotsPage() {
         status: slotStatus
       });
 
-      setSlotName("");
-      setStartDate("");
-      setHatchDate("");
-      setEggCapacity("5000");
-      setSlotStatus("planned");
       setStatus("Slot created.");
       await refreshSlots();
+      return true;
     } catch {
       setStatus("Could not save slot. Please try again.");
+      return false;
     }
   };
 
@@ -110,53 +115,18 @@ export default function SlotsPage() {
 
   return (
     <>
-      <h1>Slots</h1>
-      <div className="card">
-        <h3>Create Slot</h3>
-        <p className="muted">Plan your batch dates and quantity here.</p>
-        <div className="grid">
-          <label>
-            Slot Name
-            <input value={slotName} onChange={(e) => setSlotName(e.target.value)} placeholder="Mar-Week1" />
-          </label>
-          <label>
-            Egg Capacity
-            <input
-              type="number"
-              value={eggCapacity}
-              onChange={(e) => setEggCapacity(e.target.value)}
-              min={1}
-              step={1}
-            />
-          </label>
-          <label>
-            Start Date
-            <CustomDatePicker value={startDate} onChange={setStartDate} placeholder="Select start date" />
-          </label>
-          <label>
-            Hatch Date
-            <CustomDatePicker value={hatchDate} onChange={setHatchDate} placeholder="Select hatch date" />
-          </label>
-          <label>
-            Slot Status
-            <CustomDropdown
-              options={statusOptions}
-              value={slotStatus}
-              onChange={(next) => setSlotStatus(next as SlotRecord["status"])}
-              searchable
-              searchPlaceholder="Search status"
-            />
-          </label>
-        </div>
-        <div className="form-actions-sticky">
-          <button
-            onClick={() => {
-              if (validateForm()) setShowConfirm(true);
-            }}
-          >
-            Save Slot
-          </button>
-        </div>
+      <div className="page-head-inline">
+        <h1>Slots</h1>
+        <button
+          type="button"
+          className="primary-inline-btn"
+          onClick={() => {
+            resetForm();
+            setShowForm(true);
+          }}
+        >
+          Add Slot
+        </button>
       </div>
 
       <div className="card">
@@ -182,18 +152,74 @@ export default function SlotsPage() {
         {status ? <p className="muted">{status}</p> : null}
       </div>
 
-      <ConfirmModal
-        open={showConfirm}
-        title="Save Slot"
-        message={`Create slot \"${slotName}\" with ${eggCapacity} eggs?`}
-        confirmText="Create"
-        cancelText="Back"
-        onCancel={() => setShowConfirm(false)}
-        onConfirm={() => {
-          setShowConfirm(false);
-          void submitSlot();
-        }}
-      />
+      {showForm ? (
+        <div className={uiStyles.modalOverlay} onClick={() => setShowForm(false)}>
+          <div className={uiStyles.modal} onClick={(event) => event.stopPropagation()}>
+            <div className={uiStyles.modalHeader}>
+              <h3 className={uiStyles.modalTitle}>Add Slot</h3>
+              <button type="button" className={uiStyles.closeBtn} onClick={() => setShowForm(false)}>
+                ✕
+              </button>
+            </div>
+
+            <form
+              className={uiStyles.formGrid}
+              onSubmit={async (event) => {
+                event.preventDefault();
+                const ok = await submitSlot();
+                if (ok) {
+                  setShowForm(false);
+                  resetForm();
+                }
+              }}
+            >
+              <label className={uiStyles.field}>
+                Slot Name
+                <input value={slotName} onChange={(e) => setSlotName(e.target.value)} placeholder="Mar-Week1" />
+              </label>
+
+              <label className={uiStyles.field}>
+                Egg Capacity
+                <input
+                  type="number"
+                  value={eggCapacity}
+                  onChange={(e) => setEggCapacity(e.target.value)}
+                  min={1}
+                  step={1}
+                />
+              </label>
+
+              <label className={uiStyles.field}>
+                Start Date
+                <CustomDatePicker value={startDate} onChange={setStartDate} placeholder="Select start date" />
+              </label>
+
+              <label className={uiStyles.field}>
+                Hatch Date
+                <CustomDatePicker value={hatchDate} onChange={setHatchDate} placeholder="Select hatch date" />
+              </label>
+
+              <label className={uiStyles.field}>
+                Slot Status
+                <CustomDropdown
+                  options={statusOptions}
+                  value={slotStatus}
+                  onChange={(next) => setSlotStatus(next as SlotRecord["status"])}
+                  searchable
+                  searchPlaceholder="Search status"
+                />
+              </label>
+
+              <div className={uiStyles.modalActions}>
+                <button type="button" className={uiStyles.secondaryBtn} onClick={() => setShowForm(false)}>
+                  Cancel
+                </button>
+                <button type="submit">Create Slot</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
     </>
   );
 }
