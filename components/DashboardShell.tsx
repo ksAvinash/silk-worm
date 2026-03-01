@@ -91,6 +91,14 @@ const links = [
   ["/settings", "Settings", "Business and defaults"]
 ] as const;
 
+const mobileLinks = [
+  ["/dashboard", "Home"],
+  ["/slots", "Slots"],
+  ["/bookings", "Orders"],
+  ["/billing", "Billing"],
+  ["/farmers", "Farmers"]
+] as const;
+
 export default function DashboardShell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
   const { business, profile, logout } = useAuth();
@@ -130,6 +138,14 @@ export default function DashboardShell({ children }: { children: React.ReactNode
       </section>
 
       <section className="main workspace-main">{children}</section>
+
+      <nav className="mobile-dock" aria-label="Primary mobile navigation">
+        {mobileLinks.map(([href, label]) => (
+          <Link key={href} href={href} className={`mobile-dock-item ${isActive(href) ? "active" : ""}`}>
+            {label}
+          </Link>
+        ))}
+      </nav>
     </div>
   );
 }

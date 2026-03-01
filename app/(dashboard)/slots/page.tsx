@@ -1,8 +1,19 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import ConfirmModal from "@/components/ui/ConfirmModal";
+import CustomDatePicker from "@/components/ui/CustomDatePicker";
+import CustomDropdown, { type DropdownOption } from "@/components/ui/CustomDropdown";
+import SearchInput from "@/components/ui/SearchInput";
 import { useAuth } from "@/components/AuthProvider";
 import { createSlot, listSlotsByBusiness, type SlotRecord } from "@/lib/firebase/slots";
+
+const statusOptions: DropdownOption[] = [
+  { label: "Planned", value: "planned" },
+  { label: "Hatching", value: "hatching" },
+  { label: "Open", value: "open" },
+  { label: "Closed", value: "closed" }
+];
 
 export default function SlotsPage() {
   const { profile } = useAuth();
@@ -15,6 +26,9 @@ export default function SlotsPage() {
   const [startDate, setStartDate] = useState("");
   const [hatchDate, setHatchDate] = useState("");
   const [eggCapacity, setEggCapacity] = useState("5000");
+  const [slotStatus, setSlotStatus] = useState<SlotRecord["status"]>("planned");
+  const [searchText, setSearchText] = useState("");
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const refreshSlots = useCallback(async () => {
     if (!profile?.businessId) {
@@ -38,17 +52,26 @@ export default function SlotsPage() {
     void refreshSlots();
   }, [refreshSlots]);
 
+  const validateForm = () => {
+    const capacity = Number(eggCapacity);
+    if (!slotName || !startDate || !hatchDate || !capacity || capacity <= 0) {
+      setStatus("Please fill all fields with valid values.");
+      return false;
+    }
+
+    return true;
+  };
+
   const submitSlot = async () => {
     if (!profile?.businessId) {
       return;
     }
 
-    const capacity = Number(eggCapacity);
-
-    if (!slotName || !startDate || !hatchDate || !capacity || capacity <= 0) {
-      setStatus("Please fill all fields with valid values.");
+    if (!validateForm()) {
       return;
     }
+
+    const capacity = Number(eggCapacity);
 
     try {
       await createSlot({
@@ -56,19 +79,34 @@ export default function SlotsPage() {
         slotName,
         startDate,
         hatchDate,
-        eggCapacity: capacity
+        eggCapacity: capacity,
+        status: slotStatus
       });
 
       setSlotName("");
       setStartDate("");
       setHatchDate("");
       setEggCapacity("5000");
+      setSlotStatus("planned");
       setStatus("Slot created.");
       await refreshSlots();
     } catch {
       setStatus("Could not save slot. Please try again.");
     }
   };
+
+  const filteredSlots = useMemo(() => {
+    const query = searchText.trim().toLowerCase();
+    if (!query) return slots;
+
+    return slots.filter((slot) => {
+      return (
+        slot.slotName.toLowerCase().includes(query) ||
+        slot.status.toLowerCase().includes(query) ||
+        String(slot.eggCapacity).includes(query)
+      );
+    });
+  }, [searchText, slots]);
 
   return (
     <>
@@ -82,14 +120,6 @@ export default function SlotsPage() {
             <input value={slotName} onChange={(e) => setSlotName(e.target.value)} placeholder="Mar-Week1" />
           </label>
           <label>
-            Start Date
-            <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-          </label>
-          <label>
-            Hatch Date
-            <input type="date" value={hatchDate} onChange={(e) => setHatchDate(e.target.value)} />
-          </label>
-          <label>
             Egg Capacity
             <input
               type="number"
@@ -99,17 +129,45 @@ export default function SlotsPage() {
               step={1}
             />
           </label>
+          <label>
+            Start Date
+            <CustomDatePicker value={startDate} onChange={setStartDate} placeholder="Select start date" />
+          </label>
+          <label>
+            Hatch Date
+            <CustomDatePicker value={hatchDate} onChange={setHatchDate} placeholder="Select hatch date" />
+          </label>
+          <label>
+            Slot Status
+            <CustomDropdown
+              options={statusOptions}
+              value={slotStatus}
+              onChange={(next) => setSlotStatus(next as SlotRecord["status"])}
+              searchable
+              searchPlaceholder="Search status"
+            />
+          </label>
         </div>
-        <button style={{ marginTop: 12 }} onClick={submitSlot}>
-          Save Slot
-        </button>
+        <div className="form-actions-sticky">
+          <button
+            onClick={() => {
+              if (validateForm()) setShowConfirm(true);
+            }}
+          >
+            Save Slot
+          </button>
+        </div>
       </div>
 
       <div className="card">
         <h3>My Slots</h3>
+        <div style={{ marginBottom: 12 }}>
+          <SearchInput value={searchText} onChange={setSearchText} placeholder="Search by slot name, status, or capacity" />
+        </div>
+
         {loading ? <p>Loading...</p> : null}
-        {!loading && !slots.length ? <p className="muted">No slots available.</p> : null}
-        {slots.map((slot) => (
+        {!loading && !filteredSlots.length ? <p className="muted">No slots available.</p> : null}
+        {filteredSlots.map((slot) => (
           <article key={slot.id} className="card">
             <div className="badge">{slot.status}</div>
             <h4>{slot.slotName}</h4>
@@ -123,6 +181,19 @@ export default function SlotsPage() {
         ))}
         {status ? <p className="muted">{status}</p> : null}
       </div>
+
+      <ConfirmModal
+        open={showConfirm}
+        title="Save Slot"
+        message={`Create slot \"${slotName}\" with ${eggCapacity} eggs?`}
+        confirmText="Create"
+        cancelText="Back"
+        onCancel={() => setShowConfirm(false)}
+        onConfirm={() => {
+          setShowConfirm(false);
+          void submitSlot();
+        }}
+      />
     </>
   );
 }

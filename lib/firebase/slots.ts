@@ -29,6 +29,7 @@ interface CreateSlotInput {
   startDate: string;
   hatchDate: string;
   eggCapacity: number;
+  status?: SlotRecord["status"];
 }
 
 function asDateString(value: unknown): string {
@@ -70,6 +71,8 @@ export async function listSlotsByBusiness(businessId: string): Promise<SlotRecor
 }
 
 export async function createSlot(input: CreateSlotInput): Promise<void> {
+  const status = input.status || "planned";
+
   await addDoc(collection(db, "slots"), {
     businessId: input.businessId,
     slotName: input.slotName,
@@ -79,7 +82,7 @@ export async function createSlot(input: CreateSlotInput): Promise<void> {
     wormCapacity: input.eggCapacity,
     bookedQty: 0,
     availableQty: input.eggCapacity,
-    status: "planned",
+    status,
     createdAt: serverTimestamp()
   });
 }
