@@ -1,11 +1,16 @@
 :root {
-  --bg: #f6f1e8;
-  --surface: #fff9f0;
-  --ink: #2b261f;
-  --muted: #6f675a;
-  --brand: #5c7f2f;
-  --brand-2: #a68545;
-  --border: #dbcda9;
+  --bg: #eef4e6;
+  --surface: #f9fbf5;
+  --surface-2: #f2f8eb;
+  --ink: #1f2b1e;
+  --muted: #5f6f5c;
+  --brand: #5a7d2f;
+  --brand-strong: #43631f;
+  --brand-soft: #dbe8c8;
+  --lint: #d9d2c1;
+  --soil: #8c6c41;
+  --border: #c6d8b3;
+  --shadow: 0 12px 26px rgba(57, 87, 23, 0.08);
 }
 
 * {
@@ -14,13 +19,25 @@
 
 body {
   margin: 0;
-  font-family: "Source Sans 3", system-ui, sans-serif;
-  background: radial-gradient(circle at top right, #efe6d4 0%, var(--bg) 45%), var(--bg);
+  font-family: "Nunito Sans", "Avenir Next", "Segoe UI", sans-serif;
+  background:
+    radial-gradient(1200px 500px at 8% -5%, #dcecc8 8%, transparent 60%),
+    radial-gradient(1000px 460px at 100% 0%, #e6eed6 0%, transparent 58%),
+    linear-gradient(180deg, #f4f8ed 0%, var(--bg) 24%, #edf4e4 100%);
   color: var(--ink);
+  line-height: 1.4;
 }
 
 a {
   color: inherit;
+}
+
+.main h1,
+.main h2,
+.main h3,
+.main h4 {
+  font-family: "Merriweather", "Palatino Linotype", "Book Antiqua", serif;
+  letter-spacing: 0.2px;
 }
 
 .shell {
@@ -30,24 +47,30 @@ a {
 }
 
 .sidebar {
-  background: linear-gradient(180deg, #30481c 0%, #3f5b25 100%);
-  color: #f4f1e8;
+  background:
+    linear-gradient(135deg, rgba(240, 243, 221, 0.11), transparent 60%),
+    linear-gradient(180deg, #2d4f18 0%, #3d6422 52%, #35561d 100%);
+  color: #f2f7e8;
   padding: 20px;
+  border-right: 1px solid rgba(235, 245, 220, 0.2);
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.08);
 }
 
 .sidebar h1 {
-  margin: 0 0 16px;
-  font-size: 1.2rem;
+  margin: 0 0 14px;
+  font-family: "Merriweather", "Palatino Linotype", "Book Antiqua", serif;
+  font-size: 1.22rem;
+  letter-spacing: 0.4px;
 }
 
 .tenant-name {
   margin: 0 0 4px;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   opacity: 0.95;
 }
 
 .tenant-meta {
-  margin: 0 0 14px;
+  margin: 0 0 16px;
   font-size: 0.82rem;
   opacity: 0.8;
 }
@@ -59,19 +82,24 @@ a {
 
 .sidebar a {
   text-decoration: none;
-  padding: 10px;
+  padding: 10px 11px;
   border-radius: 8px;
-  opacity: 0.95;
+  opacity: 0.96;
+  transition: background 0.2s ease, transform 0.2s ease;
 }
 
 .sidebar a:hover,
 .sidebar a.active {
-  background: rgba(255, 255, 255, 0.16);
+  background: rgba(242, 250, 228, 0.2);
+  transform: translateX(2px);
 }
 
 .logout-btn {
   margin-top: 18px;
   width: 100%;
+  background: rgba(240, 248, 226, 0.15);
+  border-color: rgba(231, 243, 211, 0.45);
+  color: #edf7dc;
 }
 
 .main {
@@ -79,11 +107,24 @@ a {
 }
 
 .card {
-  background: var(--surface);
+  background: linear-gradient(180deg, var(--surface) 0%, var(--surface-2) 100%);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 16px;
+  border-radius: 14px;
+  padding: 16px 16px 15px;
   margin-bottom: 14px;
+  box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto auto 0;
+  height: 4px;
+  width: 100%;
+  background: linear-gradient(90deg, var(--brand) 0%, #87a94b 45%, #c6a167 100%);
+  opacity: 0.85;
 }
 
 .grid {
@@ -94,11 +135,14 @@ a {
 
 .badge {
   display: inline-block;
-  padding: 2px 8px;
+  padding: 3px 9px;
   border-radius: 99px;
-  background: #e4edd4;
-  color: #355019;
+  background: var(--brand-soft);
+  color: #2f4b14;
+  border: 1px solid #b8d095;
   font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.2px;
 }
 
 .muted {
@@ -109,16 +153,34 @@ input,
 button,
 select {
   font: inherit;
-  border-radius: 8px;
+  border-radius: 9px;
   border: 1px solid var(--border);
-  padding: 10px;
+  padding: 10px 11px;
 }
 
 button {
-  background: var(--brand);
+  background: linear-gradient(180deg, #6a8f39 0%, var(--brand) 100%);
   color: #fff;
-  border-color: #416112;
+  border-color: var(--brand-strong);
   cursor: pointer;
+  font-weight: 700;
+  transition: transform 0.15s ease, filter 0.18s ease;
+}
+
+button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.04);
+}
+
+input,
+select {
+  background: #fbfef7;
+}
+
+input:focus,
+select:focus {
+  outline: 2px solid #a5c375;
+  outline-offset: 1px;
 }
 
 button:disabled {
@@ -139,5 +201,9 @@ button:disabled {
 
   .sidebar nav {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .main {
+    padding: 16px;
   }
 }
