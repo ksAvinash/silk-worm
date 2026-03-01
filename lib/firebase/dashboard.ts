@@ -57,14 +57,28 @@ function asDateString(value: unknown) {
   return "";
 }
 
+const EMPTY_SNAPSHOT = { docs: [], size: 0 } as const;
+
+function settled<T>(result: PromiseSettledResult<T>, label: string): T | typeof EMPTY_SNAPSHOT {
+  if (result.status === "fulfilled") return result.value;
+  console.warn(`[dashboard] failed to load "${label}":`, result.reason);
+  return EMPTY_SNAPSHOT as unknown as T;
+}
+
 export async function getDashboardMetrics(businessId: string): Promise<DashboardMetrics> {
-  const [slotSnapshot, farmerSnapshot, bookingSnapshot, invoiceSnapshot, paymentSnapshot] = await Promise.all([
+  const results = await Promise.allSettled([
     getDocs(businessCollection(businessId, "slots")),
     getDocs(businessCollection(businessId, "farmers")),
     getDocs(businessCollection(businessId, "bookings")),
     getDocs(businessCollection(businessId, "invoices")),
     getDocs(businessCollection(businessId, "payments"))
   ]);
+
+  const slotSnapshot    = settled(results[0], "slots");
+  const farmerSnapshot  = settled(results[1], "farmers");
+  const bookingSnapshot = settled(results[2], "bookings");
+  const invoiceSnapshot = settled(results[3], "invoices");
+  const paymentSnapshot = settled(results[4], "payments");
 
   const slots: SlotRecord[] = slotSnapshot.docs.map((doc) => {
     const data = doc.data();
