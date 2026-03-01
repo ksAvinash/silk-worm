@@ -9,7 +9,7 @@ export default function SlotsPage() {
 
   const [slots, setSlots] = useState<SlotRecord[]>([]);
   const [loading, setLoading] = useState(true);
-  const [status, setStatus] = useState("Loading slots...");
+  const [status, setStatus] = useState("Loading...");
 
   const [slotName, setSlotName] = useState("");
   const [startDate, setStartDate] = useState("");
@@ -27,8 +27,8 @@ export default function SlotsPage() {
       const rows = await listSlotsByBusiness(profile.businessId);
       setSlots(rows);
       setStatus(rows.length ? "" : "No slots yet. Create your first slot.");
-    } catch (error) {
-      setStatus(`Failed to load slots: ${String(error)}`);
+    } catch {
+      setStatus("Could not load slots. Please refresh and try again.");
     } finally {
       setLoading(false);
     }
@@ -46,7 +46,7 @@ export default function SlotsPage() {
     const capacity = Number(eggCapacity);
 
     if (!slotName || !startDate || !hatchDate || !capacity || capacity <= 0) {
-      setStatus("Enter valid slot name, dates, and egg capacity.");
+      setStatus("Please fill all fields with valid values.");
       return;
     }
 
@@ -65,8 +65,8 @@ export default function SlotsPage() {
       setEggCapacity("5000");
       setStatus("Slot created.");
       await refreshSlots();
-    } catch (error) {
-      setStatus(`Failed to create slot: ${String(error)}`);
+    } catch {
+      setStatus("Could not save slot. Please try again.");
     }
   };
 
@@ -75,7 +75,7 @@ export default function SlotsPage() {
       <h1>Slots</h1>
       <div className="card">
         <h3>Create Slot</h3>
-        <p className="muted">All records are scoped to your breeder workspace and isolated from other breeders.</p>
+        <p className="muted">Plan your batch dates and quantity here.</p>
         <div className="grid">
           <label>
             Slot Name
@@ -117,7 +117,7 @@ export default function SlotsPage() {
               {slot.startDate} to {slot.hatchDate}
             </p>
             <p>
-              Capacity: {slot.eggCapacity} | Booked: {slot.bookedQty} | Available: {slot.availableQty}
+              Total: {slot.eggCapacity} | Booked: {slot.bookedQty} | Balance: {slot.availableQty}
             </p>
           </article>
         ))}

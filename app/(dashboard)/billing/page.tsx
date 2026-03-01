@@ -3,8 +3,8 @@ export default function BillingPage() {
     <>
       <h1>Billing</h1>
       <div className="card">
-        <h3>Why this page exists</h3>
-        <p>Create invoices per farmer booking, record payments, and track dues.</p>
+        <h3>Payments & Bills</h3>
+        <p>Create bills, record received payments, and track pending amounts.</p>
       </div>
     </>
   );

@@ -3,8 +3,8 @@ export default function SettingsPage() {
     <>
       <h1>Settings</h1>
       <div className="card">
-        <h3>Why this page exists</h3>
-        <p>Business profile, slot frequency settings, invoice prefix, and auth controls.</p>
+        <h3>Business Settings</h3>
+        <p>Update your business details and default working preferences.</p>
       </div>
     </>
   );

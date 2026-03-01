@@ -11,7 +11,7 @@ export default function LoginPage() {
 
   const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
-  const [status, setStatus] = useState("Enter phone number to receive OTP.");
+  const [status, setStatus] = useState("Enter your phone number to continue.");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -25,9 +25,9 @@ export default function LoginPage() {
 
     try {
       await requestOtp(phone);
-      setStatus("OTP sent. Enter verification code.");
-    } catch (error) {
-      setStatus(`Failed to send OTP: ${String(error)}`);
+      setStatus("Code sent. Enter it below.");
+    } catch {
+      setStatus("Could not send code. Please try again.");
     } finally {
       setBusy(false);
     }
@@ -38,9 +38,9 @@ export default function LoginPage() {
 
     try {
       await verifyOtp(code);
-      setStatus("Login success. Setting up your breeder workspace...");
-    } catch (error) {
-      setStatus(`Verification failed: ${String(error)}`);
+      setStatus("Login successful. Opening your dashboard...");
+    } catch {
+      setStatus("Code is incorrect. Please try again.");
     } finally {
       setBusy(false);
     }
@@ -48,11 +48,9 @@ export default function LoginPage() {
 
   return (
     <main style={{ maxWidth: 520, margin: "64px auto", padding: 20 }}>
-      <h1>Phone OTP Login</h1>
+      <h1>Login</h1>
       <div className="card">
-        <p className="muted">
-          Every login is mapped to a breeder workspace (`businessId`). New users automatically get a new workspace.
-        </p>
+        <p className="muted">Use your phone number to sign in.</p>
         <label htmlFor="phone">Phone (+country code)</label>
         <input
           id="phone"
@@ -62,11 +60,11 @@ export default function LoginPage() {
           disabled={busy}
         />
         <button onClick={sendOtp} style={{ marginTop: 10 }} disabled={busy || !phone.trim()}>
-          Send OTP
+          Send Code
         </button>
       </div>
       <div className="card">
-        <label htmlFor="otp">OTP</label>
+        <label htmlFor="otp">Verification Code</label>
         <input
           id="otp"
           value={code}
@@ -75,7 +73,7 @@ export default function LoginPage() {
           disabled={busy}
         />
         <button onClick={submitOtp} style={{ marginTop: 10 }} disabled={busy || !code.trim()}>
-          Verify OTP
+          Verify Code
         </button>
       </div>
       <p className="muted">{status}</p>
