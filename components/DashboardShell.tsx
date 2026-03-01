@@ -13,11 +13,13 @@ const mobileLinks = [
 
 export default function DashboardShell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
-  const isActive = (href: string) => (href === "/dashboard" ? path === href : path.startsWith(href));
+  const normalizedPath = (path || "/").replace(/\/+$/, "") || "/";
+  const isActive = (href: string) =>
+    href === "/dashboard" ? normalizedPath === href : normalizedPath.startsWith(href);
 
   return (
     <div className="workspace-page">
-      {path !== "/dashboard" ? (
+      {normalizedPath !== "/dashboard" ? (
         <Link href="/dashboard" className="workspace-back-link">
           ← Back
         </Link>
