@@ -26,7 +26,12 @@ export default function ConfirmModal({
   return (
     <div className={styles.modalOverlay} onClick={onCancel}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-        <h3 className={styles.modalTitle}>{title}</h3>
+        <div className={styles.modalHeader}>
+          <h3 className={styles.modalTitle}>{title}</h3>
+          <button type="button" className={styles.closeBtn} onClick={onCancel} aria-label="Close popup">
+            ✕
+          </button>
+        </div>
         <p className={styles.modalText}>{message}</p>
         <div className={styles.modalActions}>
           <button type="button" className={styles.secondaryBtn} onClick={onCancel}>

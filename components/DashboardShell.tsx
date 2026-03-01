@@ -18,9 +18,11 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 
   return (
     <div className="workspace-page">
-      <button type="button" className="workspace-back-link" onClick={() => router.back()}>
-        ← Back
-      </button>
+      {path !== "/dashboard" ? (
+        <button type="button" className="workspace-back-link" onClick={() => router.back()}>
+          ← Back
+        </button>
+      ) : null}
 
       <section className="main workspace-main">{children}</section>
 
