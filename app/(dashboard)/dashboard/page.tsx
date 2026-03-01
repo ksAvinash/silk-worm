@@ -8,11 +8,11 @@ import styles from "./dashboard.module.css";
 
 const quickActions = [
   { href: "/slots", title: "Slots", description: "Plan and update batch slots", accent: "#2f6b3c", bg: "#e9f5e7" },
-  { href: "/bookings", title: "Bookings", description: "Add farmer bookings quickly", accent: "#6b4a2f", bg: "#f7eee4" },
-  { href: "/inventory", title: "Inventory", description: "Check stock and balance", accent: "#2b6470", bg: "#e7f4f7" },
-  { href: "/billing", title: "Billing", description: "Track dues and collections", accent: "#5b4a92", bg: "#eeeafe" },
   { href: "/farmers", title: "Farmers", description: "View farmer records", accent: "#7a4f2f", bg: "#f8efe6" },
-  { href: "/reports", title: "Reports", description: "See trends and summaries", accent: "#5d5b24", bg: "#f3f4df" }
+  { href: "/bookings", title: "Bookings", description: "Add farmer bookings quickly", accent: "#6b4a2f", bg: "#f7eee4" },
+  { href: "/invoices", title: "Invoices", description: "Track bills and payment status", accent: "#2b6470", bg: "#e7f4f7" },
+  { href: "/reports", title: "Reports", description: "See trends and summaries", accent: "#5d5b24", bg: "#f3f4df" },
+  { href: "/users", title: "Users", description: "Manage breeder team access", accent: "#4b5f2f", bg: "#edf4e3" }
 ] as const;
 
 function QuickIcon({ id }: { id: string }) {
@@ -38,18 +38,11 @@ function QuickIcon({ id }: { id: string }) {
           <path d="M4 7h16M4 12h10M4 17h8" {...shared} />
         </svg>
       );
-    case "/inventory":
+    case "/invoices":
       return (
         <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M3 7h18l-2 11H5z" {...shared} />
-          <path d="M8 7V4h8v3" {...shared} />
-        </svg>
-      );
-    case "/billing":
-      return (
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <rect x="3" y="4" width="18" height="16" rx="2" {...shared} />
-          <path d="M3 9h18" {...shared} />
+          <path d="M6 3h9l3 3v15H6z" {...shared} />
+          <path d="M15 3v3h3M9 11h6M9 15h6" {...shared} />
         </svg>
       );
     case "/farmers":
@@ -57,6 +50,14 @@ function QuickIcon({ id }: { id: string }) {
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <circle cx="9" cy="8" r="3" {...shared} />
           <path d="M3 19a6 6 0 0 1 12 0" {...shared} />
+        </svg>
+      );
+    case "/users":
+      return (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="9" cy="8" r="3" {...shared} />
+          <circle cx="17" cy="9" r="2.5" {...shared} />
+          <path d="M2.8 19a6.2 6.2 0 0 1 12.4 0M13.8 19a4.6 4.6 0 0 1 7.4-3.7" {...shared} />
         </svg>
       );
     default:
