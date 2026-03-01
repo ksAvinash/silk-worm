@@ -19,7 +19,7 @@ export interface SlotRecord {
   wormCapacity: number;
   bookedQty: number;
   availableQty: number;
-  status: "planned" | "hatching" | "open" | "closed";
+  status: "open" | "closed";
 }
 
 interface CreateSlotInput {
@@ -63,13 +63,13 @@ export async function listSlotsByBusiness(businessId: string): Promise<SlotRecor
       wormCapacity: Number(data.wormCapacity || 0),
       bookedQty: Number(data.bookedQty || 0),
       availableQty: Number(data.availableQty || 0),
-      status: data.status || "planned"
+      status: data.status === "closed" ? "closed" : "open"
     } as SlotRecord;
   });
 }
 
 export async function createSlot(input: CreateSlotInput): Promise<void> {
-  const status = input.status || "planned";
+  const status = input.status || "open";
 
   await addDoc(businessCollection(input.businessId, "slots"), {
     slotName: input.slotName,

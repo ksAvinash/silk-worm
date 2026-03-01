@@ -9,15 +9,11 @@ import { createSlot, deleteSlot, listSlotsByBusiness, type SlotRecord, updateSlo
 import styles from "./slots.module.css";
 
 const statusOptions: DropdownOption[] = [
-  { label: "Planned", value: "planned" },
-  { label: "Hatching", value: "hatching" },
   { label: "Open", value: "open" },
   { label: "Closed", value: "closed" }
 ];
 
 function statusClass(status: SlotRecord["status"]) {
-  if (status === "planned") return styles.statusPlanned;
-  if (status === "hatching") return styles.statusHatching;
   if (status === "open") return styles.statusOpen;
   return styles.statusClosed;
 }
@@ -33,7 +29,7 @@ export default function SlotsPage() {
   const [startDate, setStartDate] = useState("");
   const [hatchDate, setHatchDate] = useState("");
   const [eggCapacity, setEggCapacity] = useState("5000");
-  const [slotStatus, setSlotStatus] = useState<SlotRecord["status"]>("planned");
+  const [slotStatus, setSlotStatus] = useState<SlotRecord["status"]>("open");
   const [searchText, setSearchText] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editingSlot, setEditingSlot] = useState<SlotRecord | null>(null);
@@ -65,7 +61,7 @@ export default function SlotsPage() {
     setStartDate("");
     setHatchDate("");
     setEggCapacity("5000");
-    setSlotStatus("planned");
+    setSlotStatus("open");
   };
 
   const validateForm = () => {
@@ -319,8 +315,6 @@ export default function SlotsPage() {
                   options={statusOptions}
                   value={slotStatus}
                   onChange={(next) => setSlotStatus(next as SlotRecord["status"])}
-                  searchable
-                  searchPlaceholder="Search status"
                 />
               </label>
 

@@ -73,7 +73,14 @@ export default function CustomDatePicker({ value, onChange, placeholder = "Selec
 
   return (
     <div className={styles.controlWrap} ref={ref}>
-      <button type="button" className={styles.trigger} onClick={() => setOpen((prev) => !prev)}>
+      <button
+        type="button"
+        className={styles.trigger}
+        onMouseDown={(event) => {
+          event.stopPropagation();
+          setOpen((prev) => !prev);
+        }}
+      >
         <span>{displayDate(value, placeholder)}</span>
         <span className={styles.chevron}>{open ? "▲" : "▼"}</span>
       </button>
@@ -113,7 +120,8 @@ export default function CustomDatePicker({ value, onChange, placeholder = "Selec
                   key={cell.date}
                   type="button"
                   className={`${styles.day} ${selectedValue === cell.date ? styles.daySelected : ""}`}
-                  onClick={() => {
+                  onMouseDown={(event) => {
+                    event.stopPropagation();
                     onChange(cell.date);
                     setOpen(false);
                   }}
