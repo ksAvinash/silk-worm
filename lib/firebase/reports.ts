@@ -33,6 +33,7 @@ export interface SlotUtilizationRow {
 export interface DailyTrendPoint {
   day: number;
   value: number;
+  unitsBooked: number;
 }
 
 export interface ReportsPayload {
@@ -244,14 +245,20 @@ export async function getReportsPayload(businessId: string, month: string): Prom
     .slice(0, 8);
 
   const dailyTotals = Array.from({ length: totalDays }, () => 0);
+  const dailyUnits = Array.from({ length: totalDays }, () => 0);
   for (const booking of monthBookings) {
     const day = Number(booking.bookingDate.split("-")[2] || 0);
     if (day >= 1 && day <= totalDays) {
       dailyTotals[day - 1] += booking.subtotal;
+      dailyUnits[day - 1] += booking.qtyBooked;
     }
   }
 
-  const dailyTrend = dailyTotals.map((value, index) => ({ day: index + 1, value }));
+  const dailyTrend = dailyTotals.map((value, index) => ({
+    day: index + 1,
+    value,
+    unitsBooked: dailyUnits[index] || 0
+  }));
 
   return {
     summary: {

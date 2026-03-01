@@ -132,12 +132,14 @@
 }
 
 .barCol {
+  position: relative;
   min-width: 10px;
   display: grid;
   grid-template-rows: 1fr auto;
   gap: 4px;
   justify-items: center;
   height: 150px;
+  padding-bottom: 2px;
 }
 
 .bar {
@@ -147,11 +149,42 @@
   align-self: end;
   border-radius: 6px 6px 2px 2px;
   background: linear-gradient(180deg, #68b83f 0%, #3f6f1f 100%);
+  transition: transform 0.14s ease, filter 0.14s ease;
+}
+
+.barCol:hover .bar,
+.barCol:focus-within .bar {
+  transform: scaleY(1.03);
+  filter: brightness(1.08);
 }
 
 .barDay {
   font-size: 9px;
   color: var(--page-muted);
+}
+
+.barTooltip {
+  position: absolute;
+  left: 50%;
+  bottom: 22px;
+  transform: translate(-50%, 6px);
+  font-size: 10px;
+  line-height: 1.2;
+  color: #fff;
+  background: rgba(30, 25, 22, 0.92);
+  border-radius: 6px;
+  padding: 4px 6px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.14s ease, transform 0.14s ease;
+  z-index: 4;
+}
+
+.barCol:hover .barTooltip,
+.barCol:focus-within .barTooltip {
+  opacity: 1;
+  transform: translate(-50%, 0);
 }
 
 .table {

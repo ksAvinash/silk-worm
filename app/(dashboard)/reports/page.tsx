@@ -116,9 +116,21 @@ export default function ReportsPage() {
               <div className={styles.chartBars}>
                 {report.dailyTrend.map((item) => {
                   const heightPercent = Math.max(2, Math.round((item.value / chartScale) * 100));
+                  const weekday = new Date(`${month}-${String(item.day).padStart(2, "0")}`).toLocaleDateString("en-IN", {
+                    weekday: "short"
+                  });
                   return (
-                    <div key={item.day} className={styles.barCol}>
+                    <div
+                      key={item.day}
+                      className={styles.barCol}
+                      tabIndex={0}
+                      role="img"
+                      aria-label={`${weekday} - ${formatNumber(item.unitsBooked)} eggs - ${formatCurrency(item.value)}`}
+                    >
                       <span className={styles.bar} style={{ height: `${heightPercent}%` }} title={`Day ${item.day}: ${formatCurrency(item.value)}`} />
+                      <span className={styles.barTooltip}>
+                        {weekday} - {formatNumber(item.unitsBooked)} eggs - {formatCurrency(item.value)}
+                      </span>
                       <span className={styles.barDay}>{item.day}</span>
                     </div>
                   );
