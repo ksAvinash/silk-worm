@@ -2,18 +2,91 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Is the caller signed in with a valid businessId token claim matching this business?
     function isMember(businessId) {
       return request.auth != null &&
         request.auth.token.businessId is string &&
         request.auth.token.businessId == businessId;
     }
 
-    // Same as above but also owner or manager role.
     function isOwnerOrManager(businessId) {
       return isMember(businessId) &&
         request.auth.token.role in ["owner", "manager"];
     }
+
+    // Global user profile — readable/writable only by the owning uid.
+    match /users/{userId} {
+      allow read:   if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update: if request.auth != null &&
+        request.auth.uid == userId &&
+        request.resource.data.businessId == resource.data.businessId &&
+        request.resource.data.role == resource.data.role;
+      allow delete: if false;
+    }
+
+    // Business workspace root.
+    match /businesses/{businessId} {
+      allow read:   if isMember(businessId);
+      allow create: if request.auth != null && request.resource.data.ownerUid == request.auth.uid;
+      allow update: if isOwnerOrManager(businessId);
+      allow delete: if false;
+
+      match /slots/{docId} {
+        allow read:           if isMember(businessId);
+        allow create, update: if isMember(businessId);
+        allow delete:         if isOwnerOrManager(businessId);
+      }
+
+      match /farmers/{docId} {
+        allow read:           if isMember(businessId);
+        allow create, update: if isMember(businessId);
+        allow delete:         if isOwnerOrManager(businessId);
+      }
+
+      match /bookings/{docId} {
+        allow read:           if isMember(businessId);
+        allow create, update: if isMember(businessId);
+        allow delete:         if isOwnerOrManager(businessId);
+      }
+
+      match /inventoryLedger/{docId} {
+        allow read:           if isMember(businessId);
+        allow create, update: if isMember(businessId);
+        allow delete:         if false;
+      }
+
+      match /invoices/{docId} {
+        allow read:                   if isMember(businessId);
+        allow create, update, delete: if isOwnerOrManager(businessId);
+      }
+
+      match /payments/{docId} {
+        allow read:                   if isMember(businessId);
+        allow create, update, delete: if isOwnerOrManager(businessId);
+      }
+
+      match /reports/{docId} {
+        allow read:                   if isMember(businessId);
+        allow create, update, delete: if isOwnerOrManager(businessId);
+      }
+
+      match /users/{docId} {
+        allow read:   if isMember(businessId);
+        allow create: if isOwnerOrManager(businessId) || (
+          request.auth != null &&
+          request.auth.uid == docId &&
+          request.resource.data.role in ["owner", "manager", "operator"]
+        );
+        allow update: if isOwnerOrManager(businessId) || (
+          isMember(businessId) &&
+          request.auth.uid == docId &&
+          request.resource.data.role == resource.data.role
+        );
+        allow delete: if isOwnerOrManager(businessId);
+      }
+    }
+  }
+}
 
     // Global user profile (uid-keyed, holds businessId + role for claim bootstrap).
     match /users/{userId} {
