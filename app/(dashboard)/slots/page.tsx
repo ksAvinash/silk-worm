@@ -4,9 +4,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import CustomDatePicker from "@/components/ui/CustomDatePicker";
 import CustomDropdown, { type DropdownOption } from "@/components/ui/CustomDropdown";
 import SearchInput from "@/components/ui/SearchInput";
-import uiStyles from "@/components/ui/controls.module.css";
 import { useAuth } from "@/components/AuthProvider";
 import { createSlot, listSlotsByBusiness, type SlotRecord } from "@/lib/firebase/slots";
+import styles from "./slots.module.css";
 
 const statusOptions: DropdownOption[] = [
   { label: "Planned", value: "planned" },
@@ -14,6 +14,13 @@ const statusOptions: DropdownOption[] = [
   { label: "Open", value: "open" },
   { label: "Closed", value: "closed" }
 ];
+
+function statusClass(status: SlotRecord["status"]) {
+  if (status === "planned") return styles.statusPlanned;
+  if (status === "hatching") return styles.statusHatching;
+  if (status === "open") return styles.statusOpen;
+  return styles.statusClosed;
+}
 
 export default function SlotsPage() {
   const { profile } = useAuth();
@@ -31,16 +38,13 @@ export default function SlotsPage() {
   const [showForm, setShowForm] = useState(false);
 
   const refreshSlots = useCallback(async () => {
-    if (!profile?.businessId) {
-      return;
-    }
+    if (!profile?.businessId) return;
 
     setLoading(true);
-
     try {
       const rows = await listSlotsByBusiness(profile.businessId);
       setSlots(rows);
-      setStatus(rows.length ? "" : "No slots yet. Create your first slot.");
+      setStatus(rows.length ? "" : "No slots yet. Add your first slot.");
     } catch {
       setStatus("Could not load slots. Please refresh and try again.");
     } finally {
@@ -70,14 +74,9 @@ export default function SlotsPage() {
     return true;
   };
 
-  const submitSlot = async (): Promise<boolean> => {
-    if (!profile?.businessId) {
-      return false;
-    }
-
-    if (!validateForm()) {
-      return false;
-    }
+  const handleCreateSlot = async () => {
+    if (!profile?.businessId) return;
+    if (!validateForm()) return;
 
     const capacity = Number(eggCapacity);
 
@@ -90,13 +89,12 @@ export default function SlotsPage() {
         eggCapacity: capacity,
         status: slotStatus
       });
-
       setStatus("Slot created.");
+      setShowForm(false);
+      resetForm();
       await refreshSlots();
-      return true;
     } catch {
       setStatus("Could not save slot. Please try again.");
-      return false;
     }
   };
 
@@ -114,12 +112,15 @@ export default function SlotsPage() {
   }, [searchText, slots]);
 
   return (
-    <>
-      <div className="page-head-inline">
-        <h1>Slots</h1>
+    <div className={styles.page}>
+      <header className={styles.header}>
+        <div>
+          <p className={styles.eyebrow}>Slots</p>
+          <h1>Hatch Slots</h1>
+          <p className={styles.lead}>Create and track weekly slot capacity, booked quantity, and balance stock.</p>
+        </div>
         <button
-          type="button"
-          className="primary-inline-btn"
+          className={styles.primaryCta}
           onClick={() => {
             resetForm();
             setShowForm(true);
@@ -127,58 +128,97 @@ export default function SlotsPage() {
         >
           Add Slot
         </button>
-      </div>
+      </header>
 
-      <div className="card">
-        <h3>My Slots</h3>
-        <div style={{ marginBottom: 12 }}>
-          <SearchInput value={searchText} onChange={setSearchText} placeholder="Search by slot name, status, or capacity" />
+      <section className={styles.list}>
+        <div className={styles.listHeader}>
+          <h2>Slot List</h2>
+          {loading ? <span>Loading...</span> : null}
         </div>
 
-        {loading ? <p>Loading...</p> : null}
-        {!loading && !filteredSlots.length ? <p className="muted">No slots available.</p> : null}
-        {filteredSlots.map((slot) => (
-          <article key={slot.id} className="card">
-            <div className="badge">{slot.status}</div>
-            <h4>{slot.slotName}</h4>
-            <p className="muted">
-              {slot.startDate} to {slot.hatchDate}
-            </p>
-            <p>
-              Total: {slot.eggCapacity} | Booked: {slot.bookedQty} | Balance: {slot.availableQty}
-            </p>
-          </article>
-        ))}
-        {status ? <p className="muted">{status}</p> : null}
-      </div>
+        <div className={styles.searchBar}>
+          <SearchInput
+            value={searchText}
+            onChange={setSearchText}
+            placeholder="Search by slot name, status, or capacity"
+          />
+        </div>
+
+        {status && !loading ? (
+          <p className={status.includes("Could not") ? styles.error : styles.message}>{status}</p>
+        ) : null}
+
+        {!loading && filteredSlots.length === 0 ? <p className={styles.empty}>No slots available.</p> : null}
+
+        {filteredSlots.length > 0 ? (
+          <div className={styles.tableContainer}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>Slot</th>
+                  <th>Start Date</th>
+                  <th>Hatch Date</th>
+                  <th>Total</th>
+                  <th>Booked</th>
+                  <th>Balance</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredSlots.map((slot) => (
+                  <tr key={slot.id}>
+                    <td className={styles.name} data-label="Slot">
+                      {slot.slotName}
+                    </td>
+                    <td data-label="Start Date">{slot.startDate || "-"}</td>
+                    <td data-label="Hatch Date">{slot.hatchDate || "-"}</td>
+                    <td data-label="Total">{slot.eggCapacity}</td>
+                    <td data-label="Booked">{slot.bookedQty}</td>
+                    <td data-label="Balance">{slot.availableQty}</td>
+                    <td data-label="Status">
+                      <span className={`${styles.statusPill} ${statusClass(slot.status)}`}>{slot.status}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
+      </section>
 
       {showForm ? (
-        <div className={uiStyles.modalOverlay} onClick={() => setShowForm(false)}>
-          <div className={uiStyles.modal} onClick={(event) => event.stopPropagation()}>
-            <div className={uiStyles.modalHeader}>
-              <h3 className={uiStyles.modalTitle}>Add Slot</h3>
-              <button type="button" className={uiStyles.closeBtn} onClick={() => setShowForm(false)}>
+        <div className={styles.modalOverlay} onClick={() => setShowForm(false)}>
+          <div className={styles.modal} onClick={(event) => event.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h2>Add Slot</h2>
+              <button type="button" className={styles.closeBtn} onClick={() => setShowForm(false)}>
                 ✕
               </button>
             </div>
 
             <form
-              className={uiStyles.formGrid}
-              onSubmit={async (event) => {
+              className={styles.form}
+              onSubmit={(event) => {
                 event.preventDefault();
-                const ok = await submitSlot();
-                if (ok) {
-                  setShowForm(false);
-                  resetForm();
-                }
+                void handleCreateSlot();
               }}
             >
-              <label className={uiStyles.field}>
+              <label className={styles.field}>
                 Slot Name
-                <input value={slotName} onChange={(e) => setSlotName(e.target.value)} placeholder="Mar-Week1" />
+                <input value={slotName} onChange={(e) => setSlotName(e.target.value)} placeholder="Mar-Week1" required />
               </label>
 
-              <label className={uiStyles.field}>
+              <label className={styles.field}>
+                Start Date
+                <CustomDatePicker value={startDate} onChange={setStartDate} placeholder="Select start date" />
+              </label>
+
+              <label className={styles.field}>
+                Hatch Date
+                <CustomDatePicker value={hatchDate} onChange={setHatchDate} placeholder="Select hatch date" />
+              </label>
+
+              <label className={styles.field}>
                 Egg Capacity
                 <input
                   type="number"
@@ -186,20 +226,11 @@ export default function SlotsPage() {
                   onChange={(e) => setEggCapacity(e.target.value)}
                   min={1}
                   step={1}
+                  required
                 />
               </label>
 
-              <label className={uiStyles.field}>
-                Start Date
-                <CustomDatePicker value={startDate} onChange={setStartDate} placeholder="Select start date" />
-              </label>
-
-              <label className={uiStyles.field}>
-                Hatch Date
-                <CustomDatePicker value={hatchDate} onChange={setHatchDate} placeholder="Select hatch date" />
-              </label>
-
-              <label className={uiStyles.field}>
+              <label className={styles.field}>
                 Slot Status
                 <CustomDropdown
                   options={statusOptions}
@@ -210,8 +241,8 @@ export default function SlotsPage() {
                 />
               </label>
 
-              <div className={uiStyles.modalActions}>
-                <button type="button" className={uiStyles.secondaryBtn} onClick={() => setShowForm(false)}>
+              <div className={styles.actions}>
+                <button type="button" className={styles.secondaryBtn} onClick={() => setShowForm(false)}>
                   Cancel
                 </button>
                 <button type="submit">Create Slot</button>
@@ -220,6 +251,6 @@ export default function SlotsPage() {
           </div>
         </div>
       ) : null}
-    </>
+    </div>
   );
 }
