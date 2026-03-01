@@ -755,7 +755,7 @@ button:disabled {
     bottom: calc(8px + env(safe-area-inset-bottom, 0px));
     z-index: 70;
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 6px;
     background: rgba(249, 252, 244, 0.95);
     backdrop-filter: blur(10px);
@@ -768,16 +768,22 @@ button:disabled {
   .mobile-dock-item {
     min-height: 42px;
     border-radius: 10px;
-    display: grid;
-    place-items: center;
-    font-size: 12px;
-    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     color: #4d5f47;
+    border: 1px solid transparent;
+  }
+
+  .mobile-dock-item svg {
+    width: 18px;
+    height: 18px;
   }
 
   .mobile-dock-item.active {
     background: #dcecc6;
     color: #2f4b14;
+    border-color: rgba(31, 42, 29, 0.15);
   }
 }
 
