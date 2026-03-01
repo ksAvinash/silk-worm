@@ -103,7 +103,7 @@ export default function ReportsPage() {
       </section>
 
       <section className={styles.grid}>
-        <div className={styles.panel}>
+        <div className={`${styles.panel} ${styles.trendPanel}`}>
           <div className={styles.panelHeader}>
             <h3>Daily Revenue Trend</h3>
             {status === "loading" ? <span>Loading...</span> : null}
