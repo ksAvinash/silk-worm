@@ -5,7 +5,7 @@ import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { useAuth } from "@/components/AuthProvider";
 import CustomDropdown, { type DropdownOption } from "@/components/ui/CustomDropdown";
 import { getTeamUserById, type ModulePermissions, type PermissionLevel } from "@/lib/firebase/users";
-import { updateBusinessSettings } from "@/lib/firebase/tenant";
+import { updateBusinessSettings, updateBusinessLogo } from "@/lib/firebase/tenant";
 import { storage } from "@/lib/firebase/config";
 import styles from "./settings.module.css";
 
@@ -188,8 +188,9 @@ export default function SettingsPage() {
       await uploadBytes(objectRef, file, { contentType: file.type });
       const url = await getDownloadURL(objectRef);
 
+      await updateBusinessLogo(profile.businessId, url);
       setForm((prev) => ({ ...prev, logoUrl: url }));
-      setStatus("Logo uploaded. Click Save Settings to apply.");
+      setStatus("Logo uploaded successfully.");
     } catch {
       setStatus("Could not upload logo right now.");
     } finally {

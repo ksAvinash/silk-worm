@@ -196,6 +196,11 @@ export async function getCurrentUserByPhone(phone: string): Promise<UserProfile 
   return { uid: row.id, ...data };
 }
 
+export async function updateBusinessLogo(businessId: string, logoUrl: string): Promise<void> {
+  const businessRef = doc(db, "businesses", businessId);
+  await updateDoc(businessRef, { logoUrl });
+}
+
 export async function updateBusinessSettings(businessId: string, payload: BusinessSettingsUpdate): Promise<void> {
   const businessRef = doc(db, "businesses", businessId);
 
