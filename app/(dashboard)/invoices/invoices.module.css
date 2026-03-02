@@ -378,6 +378,13 @@
   margin: 0;
 }
 
+.billedAddress {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--page-muted);
+  line-height: 1.45;
+}
+
 .lineItems {
   margin-bottom: 14px;
   border: 1px solid rgba(31, 42, 29, 0.08);

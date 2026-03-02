@@ -129,6 +129,7 @@ export default function InvoicesPage() {
   }, [availableBookings, selectedBookingIds]);
 
   const farmerNameById = useMemo(() => new Map(farmers.map((farmer) => [farmer.id, farmer.name])), [farmers]);
+  const farmerById = useMemo(() => new Map(farmers.map((farmer) => [farmer.id, farmer])), [farmers]);
   const bookingById = useMemo(() => new Map(bookings.map((booking) => [booking.id, booking])), [bookings]);
   const slotNameById = useMemo(() => new Map(slots.map((slot) => [slot.id, slot.slotName])), [slots]);
 
@@ -262,6 +263,8 @@ export default function InvoicesPage() {
       .map((bookingId) => bookingById.get(bookingId))
       .filter((booking): booking is BookingRecord => Boolean(booking));
   }, [bookingById, previewInvoice]);
+
+  const previewFarmer = previewInvoice ? farmerById.get(previewInvoice.farmerId) : null;
 
   const effectiveBusiness = invoiceBusiness || business;
   const address = effectiveBusiness?.address;
@@ -494,6 +497,7 @@ export default function InvoicesPage() {
               <div className={styles.billedTo}>
                 <p className={styles.billedLabel}>Billed To</p>
                 <h4>{farmerNameById.get(previewInvoice.farmerId) || "Farmer"}</h4>
+                {previewFarmer?.address ? <p className={styles.billedAddress}>{previewFarmer.address}</p> : null}
               </div>
 
               <div className={styles.lineItems}>
