@@ -293,18 +293,15 @@ export default function InvoicesPage() {
   );
   const previewTotal = Number(previewInvoice?.totalAmount || 0);
   const previewTax = Math.max(0, previewTotal - previewSubtotal);
+  const invoicePublicUrl = useMemo(() => {
+    if (!previewInvoice?.id || !profile?.businessId) return "";
+    const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || (typeof window !== "undefined" ? window.location.origin : "")).replace(/\/+$/, "");
+    if (!baseUrl) return "";
+    return `${baseUrl}/businesses/${profile.businessId}/invoices/${previewInvoice.id}`;
+  }, [previewInvoice?.id, profile?.businessId]);
   const invoiceQrPayload = useMemo(() => {
-    if (!previewInvoice) return "";
-    const farmerName = farmerNameById.get(previewInvoice.farmerId) || "Farmer";
-    const businessName = invoiceBusiness?.name || business?.name || "Business";
-    return [
-      `Invoice No: ${previewInvoice.invoiceNo}`,
-      `Date: ${previewInvoice.invoiceDate || "-"}`,
-      `Business: ${businessName}`,
-      `Farmer: ${farmerName}`,
-      `Total: ${formatCurrency(previewTotal)}`
-    ].join("\n");
-  }, [business?.name, farmerNameById, invoiceBusiness?.name, previewInvoice, previewTotal]);
+    return invoicePublicUrl;
+  }, [invoicePublicUrl]);
 
   useEffect(() => {
     let isMounted = true;

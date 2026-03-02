@@ -1,0 +1,181 @@
+.page {
+  min-height: 100vh;
+  padding: 20px;
+  background: #f5f7f2;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.meta {
+  margin: 4px 0 0;
+  color: #596255;
+  font-size: 12px;
+}
+
+.downloadBtn {
+  border: 1px solid #2c4f2a;
+  background: #456d30;
+  color: #fff;
+  border-radius: 999px;
+  padding: 10px 14px;
+  text-decoration: none;
+  font-size: 12px;
+}
+
+.message {
+  color: #596255;
+  font-size: 14px;
+}
+
+.frame {
+  width: 100%;
+  min-height: calc(100vh - 160px);
+  border: 1px solid rgba(31, 42, 29, 0.12);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.hiddenSource {
+  position: fixed;
+  left: -99999px;
+  top: 0;
+  width: 794px;
+  background: #fff;
+}
+
+.invoiceRoot {
+  width: 100%;
+  min-height: 1122px;
+  padding: 18px;
+  color: #1f2a1d;
+  font-family: Arial, sans-serif;
+}
+
+.invoiceHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.leftBlock {
+  flex: 1;
+}
+
+.rightBlock {
+  min-width: 180px;
+  text-align: right;
+}
+
+.dateLine {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.logo {
+  width: 58px;
+  height: 58px;
+  object-fit: contain;
+  border: 1px solid rgba(31, 42, 29, 0.12);
+  border-radius: 8px;
+  padding: 4px;
+  background: #fff;
+  margin-bottom: 8px;
+}
+
+.label {
+  margin: 14px 0 4px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #6b7467;
+}
+
+.text {
+  margin: 4px 0;
+  color: #5b6657;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.invoiceRoot h2,
+.invoiceRoot h3 {
+  margin: 0;
+}
+
+.divider {
+  margin: 12px 0 10px;
+  border-bottom: 1px dashed rgba(31, 42, 29, 0.18);
+}
+
+.table {
+  border: 1px solid rgba(31, 42, 29, 0.1);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(31, 42, 29, 0.08);
+  font-size: 12px;
+}
+
+.row span {
+  flex: 1;
+}
+
+.row:last-child {
+  border-bottom: none;
+}
+
+.head {
+  background: #edf3e4;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  font-size: 11px;
+}
+
+.totals {
+  width: 100%;
+  margin-top: 10px;
+  border-top: 1px solid rgba(31, 42, 29, 0.1);
+  padding-top: 8px;
+}
+
+.totalRow {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 0;
+  font-size: 13px;
+}
+
+.final {
+  font-weight: 700;
+}
+
+.bankDetails {
+  margin-top: 18px;
+  border-top: 1px dashed rgba(31, 42, 29, 0.18);
+  padding-top: 10px;
+  font-size: 12px;
+  color: #5b6657;
+}
+
+@media (max-width: 720px) {
+  .header {
+    flex-direction: column;
+  }
+
+  .frame {
+    min-height: 70vh;
+  }
+}

@@ -81,6 +81,27 @@ export async function listInvoicesByBusiness(businessId: string): Promise<Invoic
   });
 }
 
+export async function getInvoiceById(businessId: string, invoiceId: string): Promise<InvoiceRecord | null> {
+  const snapshot = await getDoc(businessDoc(businessId, "invoices", invoiceId));
+
+  if (!snapshot.exists()) {
+    return null;
+  }
+
+  const data = snapshot.data();
+  return {
+    id: snapshot.id,
+    farmerId: String(data.farmerId || ""),
+    bookingIds: Array.isArray(data.bookingIds) ? data.bookingIds.map((value) => String(value)) : [],
+    invoiceNo: String(data.invoiceNo || snapshot.id),
+    invoiceDate: asDateString(data.invoiceDate),
+    totalAmount: asNumber(data.totalAmount),
+    paidAmount: asNumber(data.paidAmount),
+    dueAmount: asNumber(data.dueAmount),
+    status: normalizeStatus(data.status)
+  };
+}
+
 export async function createInvoiceFromBookings(input: CreateInvoiceInput): Promise<void> {
   const farmerId = String(input.farmerId || "").trim();
   const bookingIds = (input.bookingIds || []).map((value) => String(value || "").trim()).filter(Boolean);
