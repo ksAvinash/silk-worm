@@ -188,7 +188,7 @@ export default function InvoicesPage() {
     }
 
     const resolveElement = async () => {
-      for (let attempt = 0; attempt < 20; attempt += 1) {
+      for (let attempt = 0; attempt < 10; attempt += 1) {
         const found = document.getElementById(`invoice-content-${invoice.id}`);
         if (found) return found;
         await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
@@ -228,12 +228,14 @@ export default function InvoicesPage() {
               const done = () => resolve();
               image.addEventListener("load", done, { once: true });
               image.addEventListener("error", done, { once: true });
+
+              window.setTimeout(done, 800);
             })
         )
       );
 
-      const renderScale = 1.5;
-      const jpegQuality = 0.78;
+      const renderScale = 1.25;
+      const jpegQuality = 0.75;
       const canvas = await html2canvas(element, {
         scale: renderScale,
         useCORS: true,
