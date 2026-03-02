@@ -183,7 +183,7 @@ export default function SettingsPage() {
     setStatus("Uploading logo...");
 
     try {
-      const objectRef = ref(storage, `businesses/${profile.businessId}/branding/company-logo.png`);
+      const objectRef = ref(storage, `businesses/${profile.businessId}/company-logo.png`);
 
       await uploadBytes(objectRef, file, { contentType: file.type });
       const url = await getDownloadURL(objectRef);
