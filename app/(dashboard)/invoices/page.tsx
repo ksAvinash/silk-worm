@@ -349,13 +349,6 @@ export default function InvoicesPage() {
   useEffect(() => {
     let isMounted = true;
 
-    if (invoiceBusiness?.logoUrl || business?.logoUrl) {
-      setFallbackLogoUrl("");
-      return () => {
-        isMounted = false;
-      };
-    }
-
     if (!profile?.businessId) {
       setFallbackLogoUrl("");
       return () => {
@@ -377,10 +370,10 @@ export default function InvoicesPage() {
     return () => {
       isMounted = false;
     };
-  }, [business?.logoUrl, invoiceBusiness?.logoUrl, profile?.businessId]);
+  }, [profile?.businessId]);
 
   const effectiveBusiness = invoiceBusiness || business;
-  const effectiveLogoUrl = invoiceBusiness?.logoUrl || business?.logoUrl || fallbackLogoUrl;
+  const effectiveLogoUrl = fallbackLogoUrl || invoiceBusiness?.logoUrl || business?.logoUrl || "";
   const address = effectiveBusiness?.address;
   const bank = effectiveBusiness?.bankDetails;
   const businessAddressLine = [address?.line1, address?.line2, address?.city, address?.state, address?.pincode, address?.country]

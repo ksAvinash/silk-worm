@@ -100,13 +100,6 @@ function InvoiceViewerPageContent() {
       isMounted = false;
     };
 
-    if (business?.logoUrl) {
-      setFallbackLogoUrl("");
-      return () => {
-        isMounted = false;
-      };
-    }
-
     const logoRef = ref(storage, `businesses/${businessId}/company-logo.png`);
     void getDownloadURL(logoRef)
       .then((url) => {
@@ -121,9 +114,9 @@ function InvoiceViewerPageContent() {
     return () => {
       isMounted = false;
     };
-  }, [business?.logoUrl, businessId]);
+  }, [businessId]);
 
-  const effectiveLogoUrl = business?.logoUrl || fallbackLogoUrl;
+  const effectiveLogoUrl = fallbackLogoUrl || business?.logoUrl || "";
   const businessAddress = useMemo(() => {
     const address = business?.address;
     return [address?.line1, address?.line2, address?.city, address?.state, address?.pincode, address?.country]
