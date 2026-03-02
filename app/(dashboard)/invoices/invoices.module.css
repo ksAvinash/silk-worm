@@ -303,11 +303,13 @@
   border-radius: 14px;
   padding: 20px;
   margin-bottom: 12px;
+  min-height: 1122px;
 }
 
 .invoiceSheet {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 220px;
+  grid-template-rows: auto auto auto auto 1fr auto;
   gap: 16px;
 }
 
@@ -491,7 +493,7 @@
 }
 
 .bankDetails {
-  margin-top: 20px;
+  margin-top: auto;
   border-top: 1px dashed rgba(31, 42, 29, 0.16);
   padding-top: 12px;
   display: grid;
@@ -657,5 +659,68 @@
   .totals {
     max-width: 100%;
     justify-self: stretch;
+  }
+}
+
+@page {
+  size: A4;
+  margin: 10mm;
+}
+
+@media print {
+  .page {
+    background: #fff;
+    color: #000;
+  }
+
+  .header,
+  .list,
+  .modalHeader,
+  .actions {
+    display: none !important;
+  }
+
+  .modalOverlay {
+    position: static;
+    background: transparent;
+    padding: 0;
+    display: block;
+  }
+
+  .previewModal {
+    width: 100%;
+    max-height: none;
+    overflow: visible;
+    border: none;
+    border-radius: 0;
+    background: #fff;
+    padding: 0;
+    box-shadow: none;
+  }
+
+  .invoiceDetails {
+    width: 100%;
+    min-height: calc(297mm - 20mm);
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 0;
+    margin: 0;
+    page-break-inside: avoid;
+  }
+
+  .invoiceSheet {
+    gap: 10mm;
+  }
+
+  .lineItems,
+  .totals,
+  .bankDetails,
+  .invoiceNoDivider {
+    break-inside: avoid;
+  }
+
+  .lineItem {
+    break-inside: avoid;
   }
 }
