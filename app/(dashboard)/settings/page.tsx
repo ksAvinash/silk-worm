@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { useAuth } from "@/components/AuthProvider";
 import CustomDropdown, { type DropdownOption } from "@/components/ui/CustomDropdown";
 import { getTeamUserById, type ModulePermissions, type PermissionLevel } from "@/lib/firebase/users";
 import { updateBusinessSettings } from "@/lib/firebase/tenant";
+import { storage } from "@/lib/firebase/config";
 import styles from "./settings.module.css";
 
 const EMPTY_PERMISSIONS: ModulePermissions = {
@@ -82,6 +84,7 @@ export default function SettingsPage() {
   const [permissions, setPermissions] = useState<ModulePermissions>(EMPTY_PERMISSIONS);
   const [form, setForm] = useState<SettingsFormState>(buildInitialForm());
   const [saving, setSaving] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -159,6 +162,41 @@ export default function SettingsPage() {
 
   const onFieldChange = (key: keyof SettingsFormState, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !profile?.businessId || !canEditSettings) return;
+
+    if (!file.type.startsWith("image/")) {
+      setStatus("Please select an image file for logo.");
+      return;
+    }
+
+    const maxBytes = 4 * 1024 * 1024;
+    if (file.size > maxBytes) {
+      setStatus("Logo image must be under 4MB.");
+      return;
+    }
+
+    setUploadingLogo(true);
+    setStatus("Uploading logo...");
+
+    try {
+      const ext = file.name.includes(".") ? file.name.split(".").pop() : "png";
+      const objectRef = ref(storage, `businesses/${profile.businessId}/branding/company-logo-${Date.now()}.${ext}`);
+
+      await uploadBytes(objectRef, file, { contentType: file.type });
+      const url = await getDownloadURL(objectRef);
+
+      setForm((prev) => ({ ...prev, logoUrl: url }));
+      setStatus("Logo uploaded. Click Save Settings to apply.");
+    } catch {
+      setStatus("Could not upload logo right now.");
+    } finally {
+      setUploadingLogo(false);
+      event.target.value = "";
+    }
   };
 
   const handleSave = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -269,6 +307,16 @@ export default function SettingsPage() {
             </label>
 
             <label className={styles.field}>
+              Upload Company Logo
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleLogoUpload}
+                disabled={!canEditSettings || loading || uploadingLogo}
+              />
+            </label>
+
+            <label className={styles.field}>
               Language
               <CustomDropdown
                 options={LANGUAGE_OPTIONS}
@@ -358,7 +406,7 @@ export default function SettingsPage() {
         <div className={styles.formActions}>
           {!canEditSettings ? <p className={styles.readOnly}>Read-only access. Ask an admin for edit permission.</p> : null}
           <button type="submit" className={styles.saveBtn} disabled={!canEditSettings || loading || saving}>
-            {saving ? "Saving..." : "Save Settings"}
+            {saving ? "Saving..." : uploadingLogo ? "Uploading Logo..." : "Save Settings"}
           </button>
         </div>
       </form>
