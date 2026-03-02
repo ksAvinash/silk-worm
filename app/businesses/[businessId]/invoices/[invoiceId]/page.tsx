@@ -193,7 +193,7 @@ function InvoiceViewerPageContent() {
             </div>
 
             {business?.bankDetails ? (
-              <div className={styles.bankDetails}>
+              <footer className={styles.bankDetails}>
                 <p className={styles.label}>Bank Details</p>
                 {business.bankDetails.accountName ? <p>Account Name: {business.bankDetails.accountName}</p> : null}
                 {business.bankDetails.bankName ? <p>Bank Name: {business.bankDetails.bankName}</p> : null}
@@ -201,7 +201,7 @@ function InvoiceViewerPageContent() {
                 {business.bankDetails.ifscCode ? <p>IFSC: {business.bankDetails.ifscCode}</p> : null}
                 {business.bankDetails.branch ? <p>Branch: {business.bankDetails.branch}</p> : null}
                 {business.bankDetails.upiId ? <p>UPI: {business.bankDetails.upiId}</p> : null}
-              </div>
+              </footer>
             ) : null}
           </div>
         </div>

@@ -304,6 +304,8 @@
   padding: 20px;
   margin-bottom: 12px;
   min-height: 1122px;
+  height: 1122px;
+  box-sizing: border-box;
 }
 
 .invoiceSheet {
@@ -311,6 +313,7 @@
   grid-template-columns: minmax(0, 1fr) 220px;
   grid-template-rows: auto auto auto auto 1fr auto;
   gap: 16px;
+  height: 100%;
 }
 
 .invoiceLeft {
@@ -456,6 +459,7 @@
   overflow: hidden;
   width: 100%;
   grid-column: 1 / -1;
+  grid-row: 3;
 }
 
 .lineItem {
@@ -490,10 +494,11 @@
   width: 100%;
   grid-column: 1 / -1;
   justify-self: stretch;
+  grid-row: 4;
 }
 
 .bankDetails {
-  margin-top: auto;
+  margin-top: 0;
   border-top: 1px dashed rgba(31, 42, 29, 0.16);
   padding-top: 12px;
   display: grid;
@@ -503,6 +508,7 @@
   grid-column: 1 / -1;
   width: 100%;
   justify-self: stretch;
+  grid-row: 6;
 }
 
 .totalRow {

@@ -20,11 +20,13 @@
 .invoiceRoot {
   width: 100%;
   min-height: calc(100vh - 40px);
+  height: calc(297mm - 20mm);
   padding: 18px;
   color: #1f2a1d;
   font-family: Arial, sans-serif;
   display: flex;
   flex-direction: column;
+  box-sizing: border-box;
 }
 
 .invoiceHeader {
@@ -172,6 +174,7 @@
 
   .invoiceRoot {
     min-height: calc(297mm - 20mm);
+    height: calc(297mm - 20mm);
     padding: 0;
     color: #000;
     display: flex;
