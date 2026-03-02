@@ -168,8 +168,8 @@ export default function SettingsPage() {
     const file = event.target.files?.[0];
     if (!file || !profile?.businessId || !canEditSettings) return;
 
-    if (!file.type.startsWith("image/")) {
-      setStatus("Please select an image file for logo.");
+    if (file.type !== "image/png") {
+      setStatus("Please upload logo in PNG format only.");
       return;
     }
 
@@ -183,7 +183,7 @@ export default function SettingsPage() {
     setStatus("Uploading logo...");
 
     try {
-      const objectRef = ref(storage, `businesses/${profile.businessId}/branding/company-logo`);
+      const objectRef = ref(storage, `businesses/${profile.businessId}/branding/company-logo.png`);
 
       await uploadBytes(objectRef, file, { contentType: file.type });
       const url = await getDownloadURL(objectRef);
@@ -304,7 +304,7 @@ export default function SettingsPage() {
               Upload Company Logo
               <input
                 type="file"
-                accept="image/*"
+                accept="image/png"
                 onChange={handleLogoUpload}
                 disabled={!canEditSettings || loading || uploadingLogo}
               />
