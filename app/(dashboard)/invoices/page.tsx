@@ -11,6 +11,7 @@ import { listBookingsByBusiness, type BookingRecord } from "@/lib/firebase/booki
 import { listFarmersByBusiness, type FarmerRecord } from "@/lib/firebase/farmers";
 import { listSlotsByBusiness, type SlotRecord } from "@/lib/firebase/slots";
 import { createInvoiceFromBookings, listInvoicesByBusiness, type InvoiceRecord, type InvoiceStatus } from "@/lib/firebase/invoices";
+import { getBusinessProfile, type BusinessProfile } from "@/lib/firebase/tenant";
 import styles from "./invoices.module.css";
 
 const invoiceStatusOptions: DropdownOption[] = [
@@ -42,12 +43,13 @@ function statusClass(status: InvoiceStatus) {
 }
 
 export default function InvoicesPage() {
-  const { profile } = useAuth();
+  const { profile, business } = useAuth();
 
   const [invoices, setInvoices] = useState<InvoiceRecord[]>([]);
   const [farmers, setFarmers] = useState<FarmerRecord[]>([]);
   const [bookings, setBookings] = useState<BookingRecord[]>([]);
   const [slots, setSlots] = useState<SlotRecord[]>([]);
+  const [invoiceBusiness, setInvoiceBusiness] = useState<BusinessProfile | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState("Loading...");
@@ -65,17 +67,19 @@ export default function InvoicesPage() {
 
     setLoading(true);
     try {
-      const [nextInvoices, nextFarmers, nextBookings, nextSlots] = await Promise.all([
+      const [nextInvoices, nextFarmers, nextBookings, nextSlots, nextBusiness] = await Promise.all([
         listInvoicesByBusiness(profile.businessId),
         listFarmersByBusiness(profile.businessId),
         listBookingsByBusiness(profile.businessId),
-        listSlotsByBusiness(profile.businessId)
+        listSlotsByBusiness(profile.businessId),
+        getBusinessProfile(profile.businessId)
       ]);
 
       setInvoices(nextInvoices);
       setFarmers(nextFarmers);
       setBookings(nextBookings);
       setSlots(nextSlots);
+      setInvoiceBusiness(nextBusiness);
       setStatus(nextInvoices.length ? "" : "No invoices yet. Create your first invoice.");
     } catch {
       setStatus("Could not load invoices. Please refresh and try again.");
@@ -258,6 +262,13 @@ export default function InvoicesPage() {
       .map((bookingId) => bookingById.get(bookingId))
       .filter((booking): booking is BookingRecord => Boolean(booking));
   }, [bookingById, previewInvoice]);
+
+  const effectiveBusiness = invoiceBusiness || business;
+  const address = effectiveBusiness?.address;
+  const bank = effectiveBusiness?.bankDetails;
+  const businessAddressLine = [address?.line1, address?.line2, address?.city, address?.state, address?.pincode, address?.country]
+    .filter(Boolean)
+    .join(", ");
 
   return (
     <div className={styles.page}>
@@ -458,6 +469,17 @@ export default function InvoicesPage() {
 
             <div id={`invoice-content-${previewInvoice.id}`} className={styles.invoiceDetails}>
               <div className={styles.invoicePreviewHeader}>
+                <div className={styles.invoiceBrand}>
+                  {effectiveBusiness?.logoUrl ? (
+                    <img src={effectiveBusiness.logoUrl} alt="Company logo" className={styles.invoiceLogo} />
+                  ) : null}
+                  <div>
+                    <p className={styles.invoiceLabel}>From</p>
+                    <h3>{effectiveBusiness?.name || "Business"}</h3>
+                    {businessAddressLine ? <p className={styles.companyAddress}>{businessAddressLine}</p> : null}
+                  </div>
+                </div>
+
                 <div>
                   <p className={styles.invoiceLabel}>Invoice</p>
                   <h3>{previewInvoice.invoiceNo}</h3>
@@ -465,6 +487,7 @@ export default function InvoicesPage() {
                 <div className={styles.invoiceMetaRight}>
                   <p>Date: {previewInvoice.invoiceDate || "-"}</p>
                   <p>Status: {previewInvoice.status}</p>
+                  {effectiveBusiness?.invoicePrefix ? <p>Prefix: {effectiveBusiness.invoicePrefix}</p> : null}
                 </div>
               </div>
 
@@ -506,6 +529,18 @@ export default function InvoicesPage() {
                   <span>{formatCurrency(previewInvoice.dueAmount)}</span>
                 </div>
               </div>
+
+              {bank ? (
+                <div className={styles.bankDetails}>
+                  <p className={styles.billedLabel}>Bank Details</p>
+                  {bank.accountName ? <p>Account Name: {bank.accountName}</p> : null}
+                  {bank.bankName ? <p>Bank Name: {bank.bankName}</p> : null}
+                  {bank.accountNumber ? <p>Account Number: {bank.accountNumber}</p> : null}
+                  {bank.ifscCode ? <p>IFSC: {bank.ifscCode}</p> : null}
+                  {bank.branch ? <p>Branch: {bank.branch}</p> : null}
+                  {bank.upiId ? <p>UPI: {bank.upiId}</p> : null}
+                </div>
+              ) : null}
             </div>
 
             <div className={styles.actions} data-html2canvas-ignore="true">

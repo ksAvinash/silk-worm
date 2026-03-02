@@ -315,6 +315,30 @@
   border-bottom: 1px solid rgba(31, 42, 29, 0.08);
 }
 
+.invoiceBrand {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  max-width: 55%;
+}
+
+.invoiceLogo {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  border-radius: 8px;
+  border: 1px solid rgba(31, 42, 29, 0.12);
+  background: #fff;
+  padding: 4px;
+}
+
+.companyAddress {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--page-muted);
+  line-height: 1.45;
+}
+
 .invoiceLabel {
   font-size: 11px;
   letter-spacing: 0.6px;
@@ -389,6 +413,16 @@
 .totals {
   border-top: 1px solid rgba(31, 42, 29, 0.08);
   padding-top: 8px;
+}
+
+.bankDetails {
+  margin-top: 14px;
+  border-top: 1px dashed rgba(31, 42, 29, 0.16);
+  padding-top: 10px;
+  display: grid;
+  gap: 3px;
+  font-size: 12px;
+  color: var(--page-muted);
 }
 
 .totalRow {
@@ -501,6 +535,10 @@
 
   .invoicePreviewHeader {
     flex-direction: column;
+  }
+
+  .invoiceBrand {
+    max-width: 100%;
   }
 
   .invoiceMetaRight {
