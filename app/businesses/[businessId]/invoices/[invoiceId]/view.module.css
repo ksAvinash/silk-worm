@@ -4,54 +4,22 @@
   background: #f5f7f2;
 }
 
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 14px;
-}
-
-.meta {
-  margin: 4px 0 0;
-  color: #596255;
-  font-size: 12px;
-}
-
-.downloadBtn {
-  border: 1px solid #2c4f2a;
-  background: #456d30;
-  color: #fff;
-  border-radius: 999px;
-  padding: 10px 14px;
-  text-decoration: none;
-  font-size: 12px;
-}
-
 .message {
   color: #596255;
   font-size: 14px;
 }
 
-.frame {
-  width: 100%;
-  min-height: calc(100vh - 160px);
+.invoiceContainer {
+  width: min(920px, 100%);
+  margin: 0 auto;
+  background: #fff;
   border: 1px solid rgba(31, 42, 29, 0.12);
-  border-radius: 12px;
-  background: #fff;
-}
-
-.hiddenSource {
-  position: fixed;
-  left: -99999px;
-  top: 0;
-  width: 794px;
-  background: #fff;
+  border-radius: 14px;
 }
 
 .invoiceRoot {
   width: 100%;
-  min-height: 1122px;
+  min-height: 100%;
   padding: 18px;
   color: #1f2a1d;
   font-family: Arial, sans-serif;
@@ -171,11 +139,7 @@
 }
 
 @media (max-width: 720px) {
-  .header {
-    flex-direction: column;
-  }
-
-  .frame {
-    min-height: 70vh;
+  .page {
+    padding: 12px;
   }
 }
