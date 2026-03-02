@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 import QRCode from "qrcode";
+import { getDownloadURL, ref } from "firebase/storage";
 import SearchInput from "@/components/ui/SearchInput";
 import CustomDatePicker from "@/components/ui/CustomDatePicker";
 import CustomDropdown, { type DropdownOption } from "@/components/ui/CustomDropdown";
@@ -13,6 +14,7 @@ import { listFarmersByBusiness, type FarmerRecord } from "@/lib/firebase/farmers
 import { listSlotsByBusiness, type SlotRecord } from "@/lib/firebase/slots";
 import { createInvoiceFromBookings, listInvoicesByBusiness, type InvoiceRecord, type InvoiceStatus } from "@/lib/firebase/invoices";
 import { getBusinessProfile, type BusinessProfile } from "@/lib/firebase/tenant";
+import { storage } from "@/lib/firebase/config";
 import styles from "./invoices.module.css";
 
 const invoiceStatusOptions: DropdownOption[] = [
@@ -57,6 +59,7 @@ export default function InvoicesPage() {
   const [showForm, setShowForm] = useState(false);
   const [previewInvoice, setPreviewInvoice] = useState<InvoiceRecord | null>(null);
   const [invoiceQrDataUrl, setInvoiceQrDataUrl] = useState("");
+  const [fallbackLogoUrl, setFallbackLogoUrl] = useState("");
   const [searchText, setSearchText] = useState("");
 
   const [farmerId, setFarmerId] = useState("");
@@ -196,12 +199,29 @@ export default function InvoicesPage() {
     element.style.minHeight = "1122px";
 
     try {
+      const images = Array.from(element.querySelectorAll("img"));
+      await Promise.all(
+        images.map(
+          (image) =>
+            new Promise<void>((resolve) => {
+              if (image.complete && image.naturalWidth > 0) {
+                resolve();
+                return;
+              }
+
+              const done = () => resolve();
+              image.addEventListener("load", done, { once: true });
+              image.addEventListener("error", done, { once: true });
+            })
+        )
+      );
+
       const renderScale = 1.5;
       const jpegQuality = 0.78;
       const canvas = await html2canvas(element, {
         scale: renderScale,
         useCORS: true,
-        allowTaint: true
+        allowTaint: false
       });
 
       const imgData = canvas.toDataURL("image/jpeg", jpegQuality);
@@ -313,8 +333,41 @@ export default function InvoicesPage() {
     };
   }, [invoiceQrPayload]);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    if (invoiceBusiness?.logoUrl || business?.logoUrl) {
+      setFallbackLogoUrl("");
+      return () => {
+        isMounted = false;
+      };
+    }
+
+    if (!profile?.businessId) {
+      setFallbackLogoUrl("");
+      return () => {
+        isMounted = false;
+      };
+    }
+
+    const logoRef = ref(storage, `businesses/${profile.businessId}/company-logo.png`);
+    void getDownloadURL(logoRef)
+      .then((url) => {
+        if (!isMounted) return;
+        setFallbackLogoUrl(url);
+      })
+      .catch(() => {
+        if (!isMounted) return;
+        setFallbackLogoUrl("");
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [business?.logoUrl, invoiceBusiness?.logoUrl, profile?.businessId]);
+
   const effectiveBusiness = invoiceBusiness || business;
-  const effectiveLogoUrl = invoiceBusiness?.logoUrl || business?.logoUrl || "";
+  const effectiveLogoUrl = invoiceBusiness?.logoUrl || business?.logoUrl || fallbackLogoUrl;
   const address = effectiveBusiness?.address;
   const bank = effectiveBusiness?.bankDetails;
   const businessAddressLine = [address?.line1, address?.line2, address?.city, address?.state, address?.pincode, address?.country]
@@ -551,6 +604,8 @@ export default function InvoicesPage() {
                       </div>
                     </div>
                   </div>
+
+                  <div className={styles.invoiceNoDivider} />
 
                   <div className={styles.lineItems}>
                     <div className={`${styles.lineItem} ${styles.lineItemHeader}`}>
