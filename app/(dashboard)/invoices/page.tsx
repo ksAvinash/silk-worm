@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
+import QRCode from "qrcode";
 import SearchInput from "@/components/ui/SearchInput";
 import CustomDatePicker from "@/components/ui/CustomDatePicker";
 import CustomDropdown, { type DropdownOption } from "@/components/ui/CustomDropdown";
@@ -55,6 +56,7 @@ export default function InvoicesPage() {
   const [status, setStatus] = useState("Loading...");
   const [showForm, setShowForm] = useState(false);
   const [previewInvoice, setPreviewInvoice] = useState<InvoiceRecord | null>(null);
+  const [invoiceQrDataUrl, setInvoiceQrDataUrl] = useState("");
   const [searchText, setSearchText] = useState("");
 
   const [farmerId, setFarmerId] = useState("");
@@ -265,8 +267,54 @@ export default function InvoicesPage() {
   }, [bookingById, previewInvoice]);
 
   const previewFarmer = previewInvoice ? farmerById.get(previewInvoice.farmerId) : null;
+  const previewSubtotal = useMemo(
+    () => previewBookings.reduce((sum, booking) => sum + (Number(booking.subtotal) || 0), 0),
+    [previewBookings]
+  );
+  const previewTotal = Number(previewInvoice?.totalAmount || 0);
+  const previewTax = Math.max(0, previewTotal - previewSubtotal);
+  const invoiceQrPayload = useMemo(() => {
+    if (!previewInvoice) return "";
+    const farmerName = farmerNameById.get(previewInvoice.farmerId) || "Farmer";
+    const businessName = invoiceBusiness?.name || business?.name || "Business";
+    return [
+      `Invoice No: ${previewInvoice.invoiceNo}`,
+      `Date: ${previewInvoice.invoiceDate || "-"}`,
+      `Business: ${businessName}`,
+      `Farmer: ${farmerName}`,
+      `Total: ${formatCurrency(previewTotal)}`
+    ].join("\n");
+  }, [business?.name, farmerNameById, invoiceBusiness?.name, previewInvoice, previewTotal]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    if (!invoiceQrPayload) {
+      setInvoiceQrDataUrl("");
+      return;
+    }
+
+    void QRCode.toDataURL(invoiceQrPayload, {
+      width: 176,
+      margin: 1,
+      errorCorrectionLevel: "M"
+    })
+      .then((dataUrl) => {
+        if (!isMounted) return;
+        setInvoiceQrDataUrl(dataUrl);
+      })
+      .catch(() => {
+        if (!isMounted) return;
+        setInvoiceQrDataUrl("");
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [invoiceQrPayload]);
 
   const effectiveBusiness = invoiceBusiness || business;
+  const effectiveLogoUrl = invoiceBusiness?.logoUrl || business?.logoUrl || "";
   const address = effectiveBusiness?.address;
   const bank = effectiveBusiness?.bankDetails;
   const businessAddressLine = [address?.line1, address?.line2, address?.city, address?.state, address?.pincode, address?.country]
@@ -471,80 +519,101 @@ export default function InvoicesPage() {
             </div>
 
             <div id={`invoice-content-${previewInvoice.id}`} className={styles.invoiceDetails}>
-              <div className={styles.invoicePreviewHeader}>
-                <div className={styles.invoiceBrand}>
-                  {effectiveBusiness?.logoUrl ? (
-                    <img src={effectiveBusiness.logoUrl} alt="Company logo" className={styles.invoiceLogo} crossOrigin="anonymous" />
+              <div className={styles.invoiceSheet}>
+                <section className={styles.invoiceLeft}>
+                  <div className={styles.invoiceTopBlock}>
+                    <div className={styles.partyDetails}>
+                      <div className={styles.invoiceBrand}>
+                        {effectiveLogoUrl ? (
+                          <img
+                            src={effectiveLogoUrl}
+                            alt="Company logo"
+                            className={styles.invoiceLogo}
+                            crossOrigin="anonymous"
+                          />
+                        ) : null}
+                        <div>
+                          <p className={styles.invoiceLabel}>Business Details</p>
+                          <h3>{effectiveBusiness?.name || "Business"}</h3>
+                          {businessAddressLine ? <p className={styles.companyAddress}>{businessAddressLine}</p> : null}
+                        </div>
+                      </div>
+
+                      <div className={styles.billedTo}>
+                        <p className={styles.billedLabel}>Farmer Details</p>
+                        <h4>{farmerNameById.get(previewInvoice.farmerId) || "Farmer"}</h4>
+                        {previewFarmer?.address ? <p className={styles.billedAddress}>{previewFarmer.address}</p> : null}
+                      </div>
+
+                      <div className={styles.invoiceNoBlock}>
+                        <p className={styles.invoiceLabel}>Invoice No</p>
+                        <h3>{previewInvoice.invoiceNo}</h3>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className={styles.lineItems}>
+                    <div className={`${styles.lineItem} ${styles.lineItemHeader}`}>
+                      <span className={styles.column}>Date</span>
+                      <span className={styles.column}>Slot</span>
+                      <span className={styles.column}>Qty</span>
+                      <span className={styles.column}>Rate</span>
+                      <span className={styles.column}>Amount</span>
+                    </div>
+                    {previewBookings.map((booking) => (
+                      <div key={booking.id} className={styles.lineItem}>
+                        <span className={styles.column}>{booking.bookingDate || "-"}</span>
+                        <span className={styles.column}>{slotNameById.get(booking.slotId) || "Slot"}</span>
+                        <span className={styles.column}>{formatNumber(booking.qtyBooked)}</span>
+                        <span className={styles.column}>{formatNumber(booking.ratePerWorm)}</span>
+                        <span className={styles.column}>{formatCurrency(booking.subtotal)}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className={styles.totals}>
+                    <div className={styles.totalRow}>
+                      <span>Subtotal</span>
+                      <span>{formatCurrency(previewSubtotal)}</span>
+                    </div>
+                    <div className={styles.totalRow}>
+                      <span>Tax</span>
+                      <span>{formatCurrency(previewTax)}</span>
+                    </div>
+                    <div className={`${styles.totalRow} ${styles.final}`}>
+                      <span>Total</span>
+                      <span>{formatCurrency(previewTotal)}</span>
+                    </div>
+                  </div>
+
+                  {bank ? (
+                    <footer className={styles.bankDetails}>
+                      <p className={styles.billedLabel}>Bank Details</p>
+                      {bank.accountName ? <p>Account Name: {bank.accountName}</p> : null}
+                      {bank.bankName ? <p>Bank Name: {bank.bankName}</p> : null}
+                      {bank.accountNumber ? <p>Account Number: {bank.accountNumber}</p> : null}
+                      {bank.ifscCode ? <p>IFSC: {bank.ifscCode}</p> : null}
+                      {bank.branch ? <p>Branch: {bank.branch}</p> : null}
+                      {bank.upiId ? <p>UPI: {bank.upiId}</p> : null}
+                    </footer>
                   ) : null}
-                  <div>
-                    <p className={styles.invoiceLabel}>From</p>
-                    <h3>{effectiveBusiness?.name || "Business"}</h3>
-                    {businessAddressLine ? <p className={styles.companyAddress}>{businessAddressLine}</p> : null}
+                </section>
+
+                <aside className={styles.invoiceRight}>
+                  <div className={styles.rightCard}>
+                    <p className={styles.invoiceDate}>Invoice Date: {previewInvoice.invoiceDate || "-"}</p>
                   </div>
-                </div>
 
-                <div>
-                  <p className={styles.invoiceLabel}>Invoice</p>
-                  <h3>{previewInvoice.invoiceNo}</h3>
-                </div>
-                <div className={styles.invoiceMetaRight}>
-                  <p>Date: {previewInvoice.invoiceDate || "-"}</p>
-                  <p>Status: {previewInvoice.status}</p>
-                  {effectiveBusiness?.invoicePrefix ? <p>Prefix: {effectiveBusiness.invoicePrefix}</p> : null}
-                </div>
-              </div>
-
-              <div className={styles.billedTo}>
-                <p className={styles.billedLabel}>Billed To</p>
-                <h4>{farmerNameById.get(previewInvoice.farmerId) || "Farmer"}</h4>
-                {previewFarmer?.address ? <p className={styles.billedAddress}>{previewFarmer.address}</p> : null}
-              </div>
-
-              <div className={styles.lineItems}>
-                <div className={`${styles.lineItem} ${styles.lineItemHeader}`}>
-                  <span className={styles.column}>Date</span>
-                  <span className={styles.column}>Slot</span>
-                  <span className={styles.column}>Qty</span>
-                  <span className={styles.column}>Rate</span>
-                  <span className={styles.column}>Amount</span>
-                </div>
-                {previewBookings.map((booking) => (
-                  <div key={booking.id} className={styles.lineItem}>
-                    <span className={styles.column}>{booking.bookingDate || "-"}</span>
-                    <span className={styles.column}>{slotNameById.get(booking.slotId) || "Slot"}</span>
-                    <span className={styles.column}>{formatNumber(booking.qtyBooked)}</span>
-                    <span className={styles.column}>{formatNumber(booking.ratePerWorm)}</span>
-                    <span className={styles.column}>{formatCurrency(booking.subtotal)}</span>
+                  <div className={styles.rightCard}>
+                    <p className={styles.invoiceLabel}>Invoice QR</p>
+                    {invoiceQrDataUrl ? (
+                      <img src={invoiceQrDataUrl} alt="Invoice QR code" className={styles.invoiceQr} />
+                    ) : (
+                      <p className={styles.qrFallback}>Unable to generate QR code.</p>
+                    )}
                   </div>
-                ))}
+                </aside>
               </div>
-
-              <div className={styles.totals}>
-                <div className={styles.totalRow}>
-                  <span>Total</span>
-                  <span>{formatCurrency(previewInvoice.totalAmount)}</span>
-                </div>
-                <div className={styles.totalRow}>
-                  <span>Paid</span>
-                  <span>{formatCurrency(previewInvoice.paidAmount)}</span>
-                </div>
-                <div className={`${styles.totalRow} ${styles.final}`}>
-                  <span>Due</span>
-                  <span>{formatCurrency(previewInvoice.dueAmount)}</span>
-                </div>
-              </div>
-
-              {bank ? (
-                <div className={styles.bankDetails}>
-                  <p className={styles.billedLabel}>Bank Details</p>
-                  {bank.accountName ? <p>Account Name: {bank.accountName}</p> : null}
-                  {bank.bankName ? <p>Bank Name: {bank.bankName}</p> : null}
-                  {bank.accountNumber ? <p>Account Number: {bank.accountNumber}</p> : null}
-                  {bank.ifscCode ? <p>IFSC: {bank.ifscCode}</p> : null}
-                  {bank.branch ? <p>Branch: {bank.branch}</p> : null}
-                  {bank.upiId ? <p>UPI: {bank.upiId}</p> : null}
-                </div>
-              ) : null}
             </div>
 
             <div className={styles.actions} data-html2canvas-ignore="true">
