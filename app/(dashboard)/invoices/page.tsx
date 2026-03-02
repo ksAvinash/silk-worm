@@ -183,8 +183,24 @@ export default function InvoicesPage() {
   };
 
   const handleDownloadInvoice = async (invoice: InvoiceRecord) => {
-    const element = document.getElementById(`invoice-content-${invoice.id}`);
-    if (!element) return;
+    if (!previewInvoice || previewInvoice.id !== invoice.id) {
+      setPreviewInvoice(invoice);
+    }
+
+    const resolveElement = async () => {
+      for (let attempt = 0; attempt < 20; attempt += 1) {
+        const found = document.getElementById(`invoice-content-${invoice.id}`);
+        if (found) return found;
+        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+      }
+      return null;
+    };
+
+    const element = await resolveElement();
+    if (!element) {
+      setStatus("Could not prepare invoice preview for download.");
+      return;
+    }
 
     const previousStyles = {
       width: element.style.width,
@@ -669,9 +685,6 @@ export default function InvoicesPage() {
             </div>
 
             <div className={styles.actions} data-html2canvas-ignore="true">
-              <button type="button" className={styles.secondaryBtn} onClick={() => setPreviewInvoice(null)}>
-                Close
-              </button>
               <button
                 type="button"
                 className={styles.downloadBtn}
