@@ -474,7 +474,7 @@ export default function InvoicesPage() {
               <div className={styles.invoicePreviewHeader}>
                 <div className={styles.invoiceBrand}>
                   {effectiveBusiness?.logoUrl ? (
-                    <img src={`${effectiveBusiness.logoUrl}?t=${Date.now()}`} alt="Company logo" className={styles.invoiceLogo} />
+                    <img src={effectiveBusiness.logoUrl} alt="Company logo" className={styles.invoiceLogo} crossOrigin="anonymous" />
                   ) : null}
                   <div>
                     <p className={styles.invoiceLabel}>From</p>

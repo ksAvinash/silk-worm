@@ -327,7 +327,7 @@ export default function SettingsPage() {
           {form.logoUrl ? (
             <div className={styles.logoPreviewWrap}>
               <p>Logo Preview</p>
-              <img src={`${form.logoUrl}?t=${Date.now()}`} alt="Company logo" className={styles.logoPreview} />
+              <img src={form.logoUrl} alt="Company logo" className={styles.logoPreview} crossOrigin="anonymous" />
             </div>
           ) : null}
         </section>
