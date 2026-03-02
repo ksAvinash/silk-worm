@@ -183,8 +183,7 @@ export default function SettingsPage() {
     setStatus("Uploading logo...");
 
     try {
-      const ext = file.name.includes(".") ? file.name.split(".").pop() : "png";
-      const objectRef = ref(storage, `businesses/${profile.businessId}/branding/company-logo-${Date.now()}.${ext}`);
+      const objectRef = ref(storage, `businesses/${profile.businessId}/branding/company-logo`);
 
       await uploadBytes(objectRef, file, { contentType: file.type });
       const url = await getDownloadURL(objectRef);
@@ -299,11 +298,6 @@ export default function SettingsPage() {
                 onChange={(e) => onFieldChange("slotFrequencyDays", e.target.value)}
                 disabled={!canEditSettings || loading}
               />
-            </label>
-
-            <label className={styles.field}>
-              Company Logo URL
-              <input value={form.logoUrl} onChange={(e) => onFieldChange("logoUrl", e.target.value)} placeholder="https://..." disabled={!canEditSettings || loading} />
             </label>
 
             <label className={styles.field}>
