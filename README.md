@@ -61,3 +61,8 @@ Deploy Firestore rules from [firestore.rules](firestore.rules) before production
 
 ## Product Plan
 See [docs/PRODUCT_PLAN.md](docs/PRODUCT_PLAN.md) and [lib/firebase/schema.md](lib/firebase/schema.md).
+
+## Engineering Governance
+- Constitution: `.specify/memory/constitution.md`
+- Speckit templates (plan/spec/tasks) in `.specify/templates/` are aligned to this
+	constitution and should be used for new feature work.
