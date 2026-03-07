@@ -1,23 +1,18 @@
 <!--
 Sync Impact Report
-- Version change: template-placeholder -> 1.0.0
+- Version change: 1.0.0 -> 1.0.1
 - Modified principles:
-  - template principle 1 -> I. Tenant Isolation Is Mandatory
-  - template principle 2 -> II. Role-Based Authorization For Sensitive Actions
-  - template principle 3 -> III. Data Integrity Over Throughput
-  - template principle 4 -> IV. Verification Gates Before Merge
-  - template principle 5 -> V. Auditability and Controlled Change
+  - None (titles unchanged; wording clarified)
 - Added sections:
-	- Operational Constraints
-	- Delivery Workflow and Quality Gates
+  - None
 - Removed sections:
-	- None
+  - None
 - Templates requiring updates:
-  - updated: .specify/templates/plan-template.md
-  - updated: .specify/templates/spec-template.md
-  - updated: .specify/templates/tasks-template.md
+  - updated: .specify/templates/plan-template.md (already aligned)
+  - updated: .specify/templates/spec-template.md (already aligned)
+  - updated: .specify/templates/tasks-template.md (already aligned)
   - pending: .specify/templates/commands/*.md (directory not present in this repository)
-  - pending: .github/prompts/speckit.constitution.prompt.md (frontmatter-only pointer; no policy text to sync)
+  - updated: .github/prompts/*.md (checked; no outdated agent-specific references found)
 - Follow-up TODOs:
   - None
 -->
@@ -75,11 +70,13 @@ bad deployments without data ambiguity.
 ## Operational Constraints
 
 - Primary platform MUST remain Next.js App Router with Firebase Auth and Firestore.
+- Auth role claims (`businessId`, `role`) MUST remain synchronized through the
+  existing custom-claims function or an equivalent reviewed mechanism.
 - Firestore rules changes MUST be version-reviewed with application code changes that
-	depend on them.
+  depend on them.
 - Tenant-unsafe collection queries (missing `businessId` scope) are prohibited.
 - Static export and GitHub Pages deployment constraints MUST be considered for route
-	and runtime feature choices.
+  and runtime feature choices.
 
 ## Delivery Workflow and Quality Gates
 
@@ -88,7 +85,7 @@ at planning and before merge.
 
 - Pull requests MUST call out tenant-isolation impact and authorization impact.
 - Pull requests affecting booking, inventory, or billing logic MUST include clear
-	validation evidence (tests or manual verification notes).
+  validation evidence (tests or manual verification notes).
 - Reviewers MUST block merges when constitution gates are not met.
 
 ## Governance
@@ -111,4 +108,4 @@ Compliance review expectations:
 - Every task list MUST map required principle-driven work where applicable.
 - Reviewers and implementers share accountability for enforcement.
 
-**Version**: 1.0.0 | **Ratified**: 2026-03-07 | **Last Amended**: 2026-03-07
+**Version**: 1.0.1 | **Ratified**: 2026-03-07 | **Last Amended**: 2026-03-07
