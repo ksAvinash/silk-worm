@@ -3,6 +3,7 @@ import {
   deleteDoc,
   getDoc,
   getDocs,
+  onSnapshot,
   serverTimestamp,
   updateDoc
 } from "firebase/firestore";
@@ -123,4 +124,35 @@ export async function updateTeamUser(input: UpdateTeamUserInput): Promise<void> 
 
 export async function removeTeamUser(businessId: string, userId: string): Promise<void> {
   await deleteDoc(businessDoc(businessId, "users", userId));
+}
+
+export function subscribeTeamUserById(
+  businessId: string,
+  userId: string,
+  onChange: (user: TeamUserRecord | null) => void,
+  onError?: (error: Error) => void
+): () => void {
+  return onSnapshot(
+    businessDoc(businessId, "users", userId),
+    (snap) => {
+      if (!snap.exists()) {
+        onChange(null);
+        return;
+      }
+
+      const data = snap.data() as Partial<TeamUserRecord>;
+      onChange({
+        id: snap.id,
+        role: (data.role || "operator") as UserRole,
+        phone: String(data.phone || ""),
+        displayName: String(data.displayName || "User"),
+        active: data.active !== false,
+        notes: String(data.notes || ""),
+        permissions: normalizePermissions((data.permissions || {}) as ModulePermissions)
+      });
+    },
+    (error) => {
+      onError?.(error as Error);
+    }
+  );
 }

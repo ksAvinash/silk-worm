@@ -11,9 +11,9 @@
 
 **Purpose**: Add shared auth/session utilities and route helpers used across all stories.
 
-- [ ] T001 Create session state utility module in `lib/firebase/session.ts`
-- [ ] T002 [P] Create role normalization and home-route resolver in `lib/firebase/role-routing.ts`
-- [ ] T003 [P] Create access decision reason types/helpers in `lib/firebase/access-decision.ts`
+- [X] T001 Create session state utility module in `lib/firebase/session.ts`
+- [X] T002 [P] Create role normalization and home-route resolver in `lib/firebase/role-routing.ts`
+- [X] T003 [P] Create access decision reason types/helpers in `lib/firebase/access-decision.ts`
 
 ---
 
@@ -23,12 +23,12 @@
 
 **⚠️ CRITICAL**: No user story work starts until this phase is complete.
 
-- [ ] T004 Extend auth context contract with session/access decision fields in `components/AuthProvider.tsx`
-- [ ] T005 [P] Add authorized active profile lookup by phone in `lib/firebase/tenant.ts`
-- [ ] T006 [P] Add claim-profile consistency validator in `lib/firebase/claims.ts`
-- [ ] T007 Enforce active member checks for protected business collections in `firestore.rules`
-- [ ] T008 Remove duplicated rules blocks and keep a single valid ruleset in `firestore.rules`
-- [ ] T009 Update auth gate to consume centralized access decisions in `components/RequireAuth.tsx`
+- [X] T004 Extend auth context contract with session/access decision fields in `components/AuthProvider.tsx`
+- [X] T005 [P] Add authorized active profile lookup by phone in `lib/firebase/tenant.ts`
+- [X] T006 [P] Add claim-profile consistency validator in `lib/firebase/claims.ts`
+- [X] T007 Enforce active member checks for protected business collections in `firestore.rules`
+- [X] T008 Remove duplicated rules blocks and keep a single valid ruleset in `firestore.rules`
+- [X] T009 Update auth gate to consume centralized access decisions in `components/RequireAuth.tsx`
 
 **Checkpoint**: Foundation ready; user stories can now be implemented independently.
 
@@ -42,12 +42,12 @@
 
 ### Implementation for User Story 1
 
-- [ ] T010 [US1] Add phone normalization and typed OTP guard errors in `lib/firebase/auth.ts`
-- [ ] T011 [P] [US1] Implement pre-OTP authorization and active-status validation in `app/(auth)/login/page.tsx`
-- [ ] T012 [US1] Implement post-OTP claim sync and session open transition in `app/(auth)/login/page.tsx`
-- [ ] T013 [P] [US1] Add role-home redirect selection helper usage in `app/(auth)/login/page.tsx`
-- [ ] T014 [US1] Wire authorized profile + business bootstrap sequencing in `components/AuthProvider.tsx`
-- [ ] T015 [US1] Enforce protected route entry via updated auth gate in `app/(dashboard)/layout.tsx`
+- [X] T010 [US1] Add phone normalization and typed OTP guard errors in `lib/firebase/auth.ts`
+- [X] T011 [P] [US1] Implement pre-OTP authorization and active-status validation in `app/(auth)/login/page.tsx`
+- [X] T012 [US1] Implement post-OTP claim sync and session open transition in `app/(auth)/login/page.tsx`
+- [X] T013 [P] [US1] Add role-home redirect selection helper usage in `app/(auth)/login/page.tsx`
+- [X] T014 [US1] Wire authorized profile + business bootstrap sequencing in `components/AuthProvider.tsx`
+- [X] T015 [US1] Enforce protected route entry via updated auth gate in `app/(dashboard)/layout.tsx`
 
 **Checkpoint**: User Story 1 is independently functional and demonstrable.
 
@@ -61,11 +61,11 @@
 
 ### Implementation for User Story 2
 
-- [ ] T016 [US2] Implement session expiry write/read/clear lifecycle helpers in `lib/firebase/session.ts`
-- [ ] T017 [US2] Add startup session-expiry enforcement and fail-safe logout in `components/AuthProvider.tsx`
-- [ ] T018 [P] [US2] Update protected route checks for missing/expired metadata in `components/RequireAuth.tsx`
-- [ ] T019 [P] [US2] Update logout flow to clear session metadata in `components/DashboardShell.tsx`
-- [ ] T020 [US2] Add already-authenticated login fast-path with expiry validation in `app/(auth)/login/page.tsx`
+- [X] T016 [US2] Implement session expiry write/read/clear lifecycle helpers in `lib/firebase/session.ts`
+- [X] T017 [US2] Add startup session-expiry enforcement and fail-safe logout in `components/AuthProvider.tsx`
+- [X] T018 [P] [US2] Update protected route checks for missing/expired metadata in `components/RequireAuth.tsx`
+- [X] T019 [P] [US2] Update logout flow to clear session metadata in `components/DashboardShell.tsx`
+- [X] T020 [US2] Add already-authenticated login fast-path with expiry validation in `app/(auth)/login/page.tsx`
 
 **Checkpoint**: User Story 2 is independently functional and demonstrable.
 
@@ -79,11 +79,11 @@
 
 ### Implementation for User Story 3
 
-- [ ] T021 [P] [US3] Add live team-user profile listener helpers in `lib/firebase/users.ts`
-- [ ] T022 [US3] Integrate role/active drift listener and forced-session-close handling in `components/AuthProvider.tsx`
-- [ ] T023 [US3] Enforce role-mismatch safe redirect logic in `components/RequireAuth.tsx`
-- [ ] T024 [P] [US3] Trigger auth context refresh after role/active updates in `app/(dashboard)/users/page.tsx`
-- [ ] T025 [US3] Add structured audit logs for session revocation reasons in `components/AuthProvider.tsx`
+- [X] T021 [P] [US3] Add live team-user profile listener helpers in `lib/firebase/users.ts`
+- [X] T022 [US3] Integrate role/active drift listener and forced-session-close handling in `components/AuthProvider.tsx`
+- [X] T023 [US3] Enforce role-mismatch safe redirect logic in `components/RequireAuth.tsx`
+- [X] T024 [P] [US3] Trigger auth context refresh after role/active updates in `app/(dashboard)/users/page.tsx`
+- [X] T025 [US3] Add structured audit logs for session revocation reasons in `components/AuthProvider.tsx`
 
 **Checkpoint**: User Story 3 is independently functional and demonstrable.
 
@@ -93,9 +93,9 @@
 
 **Purpose**: Final alignment, documentation, and verification evidence.
 
-- [ ] T026 [P] Document updated auth/session behavior and operator expectations in `docs/PRODUCT_PLAN.md`
-- [ ] T027 Run `npm run typecheck` and record result evidence in `specs/001-login-session-alignment/quickstart.md`
-- [ ] T028 Run `npm run lint` and record result evidence in `specs/001-login-session-alignment/quickstart.md`
+- [X] T026 [P] Document updated auth/session behavior and operator expectations in `docs/PRODUCT_PLAN.md`
+- [X] T027 Run `npm run typecheck` and record result evidence in `specs/001-login-session-alignment/quickstart.md`
+- [X] T028 Run `npm run lint` and record result evidence in `specs/001-login-session-alignment/quickstart.md`
 - [ ] T029 Execute critical-path manual validation checklist and capture outcomes in `specs/001-login-session-alignment/quickstart.md`
 
 ---

@@ -67,3 +67,11 @@ npm run lint
 - Screenshots of redirect outcomes for each tested role.
 - Record of forced logout on expiry and deactivation.
 - `npm run typecheck` and `npm run lint` outputs.
+
+## Validation Run Log (2026-03-07)
+
+- `npm run typecheck`: PASS (`tsc --noEmit` completed with no errors).
+- `npm run lint`: PASS with pre-existing warnings unrelated to this feature:
+  - `@next/next/no-img-element` in existing invoice/settings pages.
+  - one existing `@typescript-eslint/no-unused-vars` warning in `lib/firebase/bookings.ts`.
+- Manual critical-path checks: PENDING (requires live Firebase OTP environment and active/inactive test accounts).

@@ -1,6 +1,20 @@
 import { User } from "firebase/auth";
-import { collection, doc, getDoc, getDocs, limit, query, serverTimestamp, setDoc, updateDoc, where } from "firebase/firestore";
+import {
+  collection,
+  collectionGroup,
+  doc,
+  getDoc,
+  getDocs,
+  limit,
+  query,
+  serverTimestamp,
+  setDoc,
+  updateDoc,
+  where
+} from "firebase/firestore";
 import { db } from "./config";
+import { normalizePhoneNumber } from "./auth";
+import { normalizeRole } from "./role-routing";
 
 export type UserRole = "owner" | "manager" | "operator";
 
@@ -60,6 +74,16 @@ export interface UserProfile {
   role: UserRole;
   phone: string;
   displayName: string;
+  active?: boolean;
+}
+
+export interface AuthorizedPhoneProfile {
+  businessId: string;
+  role: UserRole;
+  phone: string;
+  displayName: string;
+  active: boolean;
+  sourceId: string;
 }
 
 function defaultBusinessName(phone?: string | null) {
@@ -169,6 +193,97 @@ export async function ensureUserProfile(user: User): Promise<UserProfile> {
   }
 
   return createBusinessForOwner(user);
+}
+
+export async function getAuthorizedActiveProfileByPhone(phone: string): Promise<AuthorizedPhoneProfile | null> {
+  const normalizedPhone = normalizePhoneNumber(phone);
+  if (!normalizedPhone) {
+    return null;
+  }
+
+  // Prefer explicit team-user authorization records for active checks.
+  const teamUsersQuery = query(collectionGroup(db, "users"), where("phone", "==", normalizedPhone), limit(5));
+  const teamUsersSnap = await getDocs(teamUsersQuery);
+
+  for (const row of teamUsersSnap.docs) {
+    const data = row.data() as Partial<AuthorizedPhoneProfile>;
+    const active = data.active !== false;
+    if (!active) {
+      continue;
+    }
+
+    const businessRef = row.ref.parent.parent;
+    if (!businessRef) {
+      continue;
+    }
+
+    return {
+      businessId: businessRef.id,
+      role: normalizeRole(data.role || "operator"),
+      phone: normalizedPhone,
+      displayName: String(data.displayName || "User"),
+      active,
+      sourceId: row.id
+    };
+  }
+
+  return null;
+}
+
+export async function linkPhoneAuthorizationToUid(user: User, authz: AuthorizedPhoneProfile): Promise<UserProfile> {
+  const userRef = doc(db, "users", user.uid);
+  const snap = await getDoc(userRef);
+
+  const profilePayload = {
+    businessId: authz.businessId,
+    role: authz.role,
+    phone: authz.phone,
+    displayName: authz.displayName || user.displayName || "User",
+    active: authz.active,
+    updatedAt: serverTimestamp()
+  };
+
+  if (snap.exists()) {
+    await updateDoc(userRef, profilePayload);
+  } else {
+    await setDoc(userRef, {
+      ...profilePayload,
+      createdAt: serverTimestamp()
+    });
+  }
+
+  // Ensure session user has a business-scoped user doc keyed by auth uid.
+  const teamUserRef = doc(db, "businesses", authz.businessId, "users", user.uid);
+  const teamUserSnap = await getDoc(teamUserRef);
+  if (!teamUserSnap.exists()) {
+    await setDoc(teamUserRef, {
+      role: authz.role,
+      phone: authz.phone,
+      displayName: authz.displayName || user.displayName || "User",
+      active: authz.active,
+      notes: "",
+      permissions: {
+        slots: "read",
+        farmers: "read",
+        bookings: "read",
+        invoices: "read",
+        reports: "read",
+        users: "none",
+        settings: "none"
+      },
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+  }
+
+  return {
+    uid: user.uid,
+    businessId: authz.businessId,
+    role: authz.role,
+    phone: authz.phone,
+    displayName: authz.displayName || user.displayName || "User",
+    active: authz.active
+  };
 }
 
 export async function getBusinessProfile(businessId: string): Promise<BusinessProfile | null> {
