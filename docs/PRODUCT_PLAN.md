@@ -95,6 +95,13 @@ Features:
 - User can only read/write docs where `request.auth.uid` belongs to same `businessId`.
 - Financial docs (invoices/payments) writable only by admin/manager roles.
 
+## Login and Session Behavior
+- Login remains Firebase Phone OTP, but access is granted only for authorized active users.
+- After OTP verification, user role and `businessId` claims are synchronized before opening protected routes.
+- Session validity is explicitly tracked in browser storage with a 24-hour expiry boundary.
+- Expired, inactive, or invalid sessions are force-logged out and redirected to `/login`.
+- Protected route entry uses centralized auth/session checks so role and tenant drift is handled consistently.
+
 ## Suggested Milestones
 1. Auth + layout + farmer + slot CRUD.
 2. Booking + overbooking guard + slot availability sync.

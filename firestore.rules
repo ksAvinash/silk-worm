@@ -2,22 +2,42 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
     function isMember(businessId) {
-      return request.auth != null &&
+      return isAuthenticated() &&
         request.auth.token.businessId is string &&
         request.auth.token.businessId == businessId;
     }
 
-    function isOwnerOrManager(businessId) {
-      return isMember(businessId) &&
-        request.auth.token.role in ["owner", "manager"];
+    function hasActiveBusinessUser(businessId) {
+      return isAuthenticated() &&
+        exists(/databases/$(database)/documents/businesses/$(businessId)/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/businesses/$(businessId)/users/$(request.auth.uid)).data.active != false;
     }
 
-    // Global user profile — readable/writable only by the owning uid.
+    function isActiveMember(businessId) {
+      return isMember(businessId) && hasActiveBusinessUser(businessId);
+    }
+
+    function isOwnerOrManager(businessId) {
+      return isActiveMember(businessId) && request.auth.token.role in ["owner", "manager"];
+    }
+
+    function isPhoneBootstrapRead() {
+      return isAuthenticated() &&
+        request.auth.token.phone_number is string &&
+        resource.data.phone is string &&
+        request.auth.token.phone_number == resource.data.phone;
+    }
+
+    // Global user profile — readable/writable only by owning uid.
     match /users/{userId} {
-      allow read:   if request.auth != null && request.auth.uid == userId;
-      allow create: if request.auth != null && request.auth.uid == userId;
-      allow update: if request.auth != null &&
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      allow update: if isAuthenticated() &&
         request.auth.uid == userId &&
         request.resource.data.businessId == resource.data.businessId &&
         request.resource.data.role == resource.data.role;
@@ -26,139 +46,63 @@ service cloud.firestore {
 
     // Business workspace root.
     match /businesses/{businessId} {
-      allow read:   if isMember(businessId);
-      allow create: if request.auth != null && request.resource.data.ownerUid == request.auth.uid;
+      allow read: if isActiveMember(businessId);
+      allow create: if isAuthenticated() && request.resource.data.ownerUid == request.auth.uid;
       allow update: if isOwnerOrManager(businessId);
       allow delete: if false;
 
       match /slots/{docId} {
-        allow read:           if isMember(businessId);
-        allow create, update: if isMember(businessId);
-        allow delete:         if isOwnerOrManager(businessId);
-      }
-
-      match /farmers/{docId} {
-        allow read:           if isMember(businessId);
-        allow create, update: if isMember(businessId);
-        allow delete:         if isOwnerOrManager(businessId);
-      }
-
-      match /bookings/{docId} {
-        allow read:           if isMember(businessId);
-        allow create, update: if isMember(businessId);
-        allow delete:         if isOwnerOrManager(businessId);
-      }
-
-      match /inventoryLedger/{docId} {
-        allow read:           if isMember(businessId);
-        allow create, update: if isMember(businessId);
-        allow delete:         if false;
-      }
-
-      match /invoices/{docId} {
-        allow read:                   if isMember(businessId);
-        allow create, update, delete: if isOwnerOrManager(businessId);
-      }
-
-      match /payments/{docId} {
-        allow read:                   if isMember(businessId);
-        allow create, update, delete: if isOwnerOrManager(businessId);
-      }
-
-      match /reports/{docId} {
-        allow read:                   if isMember(businessId);
-        allow create, update, delete: if isOwnerOrManager(businessId);
-      }
-
-      match /users/{docId} {
-        allow read:   if isMember(businessId);
-        allow create: if isOwnerOrManager(businessId) || (
-          request.auth != null &&
-          request.auth.uid == docId &&
-          request.resource.data.role in ["owner", "manager", "operator"]
-        );
-        allow update: if isOwnerOrManager(businessId) || (
-          isMember(businessId) &&
-          request.auth.uid == docId &&
-          request.resource.data.role == resource.data.role
-        );
+        allow read, create, update: if isActiveMember(businessId);
         allow delete: if isOwnerOrManager(businessId);
       }
-    }
-  }
-}
-
-    // Global user profile (uid-keyed, holds businessId + role for claim bootstrap).
-    match /users/{userId} {
-      allow read:   if request.auth != null && request.auth.uid == userId;
-      allow create: if request.auth != null && request.auth.uid == userId;
-      allow update: if request.auth != null &&
-        request.auth.uid == userId &&
-        request.resource.data.businessId == resource.data.businessId &&
-        request.resource.data.role == resource.data.role;
-      allow delete: if false;
-    }
-
-    // Business workspace root.
-    match /businesses/{businessId} {
-      allow read:   if isMember(businessId);
-      allow create: if request.auth != null && request.resource.data.ownerUid == request.auth.uid;
-      allow update: if isOwnerOrManager(businessId);
-      allow delete: if false;
-
-      match /slots/{docId} {
-        allow read:           if isMember(businessId);
-        allow create, update: if isMember(businessId);
-        allow delete:         if isOwnerOrManager(businessId);
-      }
 
       match /farmers/{docId} {
-        allow read:           if isMember(businessId);
-        allow create, update: if isMember(businessId);
-        allow delete:         if isOwnerOrManager(businessId);
+        allow read, create, update: if isActiveMember(businessId);
+        allow delete: if isOwnerOrManager(businessId);
       }
 
       match /bookings/{docId} {
-        allow read:           if isMember(businessId);
-        allow create, update: if isMember(businessId);
-        allow delete:         if isOwnerOrManager(businessId);
+        allow read, create, update: if isActiveMember(businessId);
+        allow delete: if isOwnerOrManager(businessId);
       }
 
       match /inventoryLedger/{docId} {
-        allow read:           if isMember(businessId);
-        allow create, update: if isMember(businessId);
-        allow delete:         if false;
+        allow read, create, update: if isActiveMember(businessId);
+        allow delete: if false;
       }
 
       match /invoices/{docId} {
-        allow read:                   if isMember(businessId);
+        allow read: if isActiveMember(businessId);
         allow create, update, delete: if isOwnerOrManager(businessId);
       }
 
       match /payments/{docId} {
-        allow read:                   if isMember(businessId);
+        allow read: if isActiveMember(businessId);
         allow create, update, delete: if isOwnerOrManager(businessId);
       }
 
       match /reports/{docId} {
-        allow read:                   if isMember(businessId);
+        allow read: if isActiveMember(businessId);
         allow create, update, delete: if isOwnerOrManager(businessId);
       }
 
       match /users/{docId} {
-        allow read:   if isMember(businessId);
-        // isOwnerOrManager covers claim-bearing sessions.
-        // The claim-free path covers first-login bootstrap (owner writing their own doc before claims are set).
+        allow read: if isActiveMember(businessId) || isPhoneBootstrapRead();
+
+        // Claim-bearing admin path + claim-free first-login bootstrap path.
         allow create: if isOwnerOrManager(businessId) || (
-          request.auth != null &&
+          isAuthenticated() &&
           request.auth.uid == docId &&
-          request.resource.data.role in ["owner", "manager", "operator"]
+          request.resource.data.role in ["owner", "manager", "operator"] &&
+          request.resource.data.phone == request.auth.token.phone_number
         );
+
         allow update: if isOwnerOrManager(businessId) || (
-          isMember(businessId) &&
+          isActiveMember(businessId) &&
           request.auth.uid == docId &&
           request.resource.data.role == resource.data.role
         );
+
         allow delete: if isOwnerOrManager(businessId);
       }
     }

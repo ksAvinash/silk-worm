@@ -2,13 +2,26 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { clearRecaptcha, requestOtp, setupRecaptcha, verifyOtp } from "@/lib/firebase/auth";
+import {
+  clearRecaptcha,
+  isValidPhoneNumber,
+  normalizePhoneNumber,
+  OtpGuardError,
+  requestOtp,
+  setupRecaptcha,
+  verifyOtp
+} from "@/lib/firebase/auth";
 import { useAuth } from "@/components/AuthProvider";
-import { RecaptchaVerifier } from "firebase/auth";
+import { RecaptchaVerifier, signOut } from "firebase/auth";
+import { getHomeRouteForRole } from "@/lib/firebase/role-routing";
+import { getAuthorizedActiveProfileByPhone, linkPhoneAuthorizationToUid } from "@/lib/firebase/tenant";
+import { syncBusinessRoleClaims } from "@/lib/firebase/claims";
+import { auth } from "@/lib/firebase/config";
+import { setSessionExpiry } from "@/lib/firebase/session";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { user, profile, loading } = useAuth();
+  const { user, profile, loading, access } = useAuth();
 
   const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
@@ -17,15 +30,11 @@ export default function LoginPage() {
   const [busy, setBusy] = useState(false);
   const recaptchaRef = useRef<RecaptchaVerifier | null>(null);
 
-  const normalizePhone = (value: string) => {
-    const raw = value.trim().replace(/\s+/g, "");
-    if (raw.startsWith("+")) return raw;
-    const digits = raw.replace(/\D/g, "");
-    if (digits.length === 10) return `+91${digits}`;
-    return raw;
-  };
-
   const getOtpErrorMessage = (error: unknown) => {
+    if (error instanceof OtpGuardError) {
+      return error.message;
+    }
+
     const code = typeof error === "object" && error && "code" in error ? String((error as { code?: string }).code) : "";
     switch (code) {
       case "auth/invalid-phone-number":
@@ -44,9 +53,13 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!loading && user && profile) {
-      router.replace("/dashboard");
+      if (access.reason === "session-expired") {
+        router.replace("/login");
+      } else {
+        router.replace(getHomeRouteForRole(profile.role));
+      }
     }
-  }, [loading, user, profile, router]);
+  }, [loading, user, profile, access.reason, router]);
 
   useEffect(() => {
     let mounted = true;
@@ -76,9 +89,23 @@ export default function LoginPage() {
   const sendOtp = async () => {
     setBusy(true);
     setStatus("");
-    const normalized = normalizePhone(phone);
+    const normalized = normalizePhoneNumber(phone);
 
     try {
+      if (!isValidPhoneNumber(normalized)) {
+        throw new OtpGuardError("invalid-phone", "Phone number is invalid. Use country code, for example +91XXXXXXXXXX.");
+      }
+
+      // Attempt an early authorization check when readable in the current environment.
+      try {
+        const preAuth = await getAuthorizedActiveProfileByPhone(normalized);
+        if (preAuth && preAuth.active === false) {
+          throw new OtpGuardError("inactive-user", "Your account is inactive. Contact your administrator.");
+        }
+      } catch {
+        // Pre-OTP authorization is best-effort only.
+      }
+
       if (!recaptchaRef.current) {
         recaptchaRef.current = await setupRecaptcha("recaptcha-container");
       }
@@ -108,10 +135,39 @@ export default function LoginPage() {
     setStatus("");
 
     try {
-      await verifyOtp(code);
+      const authResult = await verifyOtp(code);
+      const signedPhone = normalizePhoneNumber(authResult.user.phoneNumber || phone);
+      const authorized = await getAuthorizedActiveProfileByPhone(signedPhone);
+
+      if (!authorized) {
+        await signOut(auth);
+        throw new OtpGuardError("unauthorized-user", "This phone number is not authorized. Contact your administrator.");
+      }
+
+      if (!authorized.active) {
+        await signOut(auth);
+        throw new OtpGuardError("inactive-user", "Your account is inactive. Contact your administrator.");
+      }
+
+      const linkedProfile = await linkPhoneAuthorizationToUid(authResult.user, authorized);
+      await syncBusinessRoleClaims(authResult.user, linkedProfile);
+      setSessionExpiry();
+
       setStatus("Login successful. Opening your dashboard...");
-    } catch {
-      setStatus("Code is incorrect. Please try again.");
+      router.replace(getHomeRouteForRole(linkedProfile.role));
+    } catch (error) {
+      const code = typeof error === "object" && error && "code" in error ? String((error as { code?: string }).code) : "";
+      if (error instanceof OtpGuardError) {
+        setStatus(error.message);
+      } else if (code === "auth/invalid-verification-code") {
+        setStatus("Code is incorrect. Please try again.");
+      } else if (code === "auth/code-expired") {
+        setStatus("Code has expired. Please request a new one.");
+        setStep("phone");
+        setCode("");
+      } else {
+        setStatus("Could not verify code. Please try again.");
+      }
     } finally {
       setBusy(false);
     }

@@ -219,6 +219,8 @@ export default function UsersPage() {
         setStatus("User created.");
       }
 
+      window.dispatchEvent(new Event("sw-authz-changed"));
+
       setShowForm(false);
       setEditingUser(null);
       await loadUsers();
@@ -236,6 +238,7 @@ export default function UsersPage() {
     try {
       await removeTeamUser(profile.businessId, deleteTarget.id);
       setStatus("User deleted.");
+      window.dispatchEvent(new Event("sw-authz-changed"));
       setDeleteTarget(null);
       await loadUsers();
     } catch {

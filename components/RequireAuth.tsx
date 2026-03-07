@@ -1,24 +1,43 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
+import { getHomeRouteForRole, isRoleAllowedForRoute } from "@/lib/firebase/role-routing";
+import { evaluateSessionAccess } from "@/lib/firebase/access-decision";
 
 export default function RequireAuth({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const { user, profile, loading } = useAuth();
+  const pathname = usePathname();
+  const { user, profile, loading, logout } = useAuth();
+
+  const access = evaluateSessionAccess({ user, profile });
 
   useEffect(() => {
-    if (!loading && (!user || !profile)) {
+    if (loading) return;
+
+    if (access.decision === "deny") {
+      if (access.reason === "session-expired") {
+        void logout();
+      }
       router.replace("/login");
+      return;
     }
-  }, [loading, user, profile, router]);
+
+    if (profile && pathname && !isRoleAllowedForRoute(profile.role, pathname)) {
+      router.replace(getHomeRouteForRole(profile.role));
+    }
+  }, [loading, user, profile, pathname, access.decision, access.reason, logout, router]);
 
   if (loading) {
     return <p>Checking session...</p>;
   }
 
-  if (!user || !profile) {
+  if (access.decision === "deny") {
+    if (access.reason === "session-expired") {
+      return <p>Session expired. Redirecting to login...</p>;
+    }
+
     return <p>Redirecting to login...</p>;
   }
 

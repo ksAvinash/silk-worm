@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
+import { clearSessionExpiry } from "@/lib/firebase/session";
 
 const mobileLinks = [
   ["/dashboard", "Home"],
@@ -68,6 +69,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 
     setIsSigningOut(true);
     try {
+      clearSessionExpiry();
       await logout();
       router.replace("/login");
     } catch (error) {
