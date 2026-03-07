@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { getDownloadURL, ref } from "firebase/storage";
 import RequireAuth from "@/components/RequireAuth";
 import { useAuth } from "@/components/AuthProvider";
@@ -22,11 +22,11 @@ function formatCurrency(value: number) {
 }
 
 function InvoiceViewerPageContent() {
-  const params = useParams<{ businessId: string; invoiceId: string }>();
+  const searchParams = useSearchParams();
   const { profile } = useAuth();
 
-  const businessId = String(params?.businessId || "");
-  const invoiceId = String(params?.invoiceId || "");
+  const businessId = String(searchParams.get("businessId") || "");
+  const invoiceId = String(searchParams.get("invoiceId") || "");
 
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState("Loading invoice...");
@@ -39,7 +39,13 @@ function InvoiceViewerPageContent() {
 
   useEffect(() => {
     const load = async () => {
-      if (!businessId || !invoiceId || !profile) return;
+      if (!profile) return;
+
+      if (!businessId || !invoiceId) {
+        setStatus("Invalid invoice link.");
+        setLoading(false);
+        return;
+      }
 
       if (profile.businessId !== businessId) {
         setStatus("You do not have access to this invoice.");
@@ -96,9 +102,11 @@ function InvoiceViewerPageContent() {
   useEffect(() => {
     let isMounted = true;
 
-    if (!businessId) return () => {
-      isMounted = false;
-    };
+    if (!businessId) {
+      return () => {
+        isMounted = false;
+      };
+    }
 
     const logoRef = ref(storage, `businesses/${businessId}/company-logo.png`);
     void getDownloadURL(logoRef)

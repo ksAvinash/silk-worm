@@ -315,7 +315,7 @@ export default function InvoicesPage() {
     if (!previewInvoice?.id || !profile?.businessId) return "";
     const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || (typeof window !== "undefined" ? window.location.origin : "")).replace(/\/+$/, "");
     if (!baseUrl) return "";
-    return `${baseUrl}/businesses/${profile.businessId}/invoices/${previewInvoice.id}`;
+    return `${baseUrl}/invoice?businessId=${encodeURIComponent(profile.businessId)}&invoiceId=${encodeURIComponent(previewInvoice.id)}`;
   }, [previewInvoice?.id, profile?.businessId]);
   const invoiceQrPayload = useMemo(() => {
     return invoicePublicUrl;
